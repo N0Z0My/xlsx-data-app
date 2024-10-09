@@ -12,7 +12,6 @@ df = pd.read_excel('list_kaigai.xlsx', sheet_name='sheet1',index_col=0)
 with st.expander('df', expanded=False):
     st.table(df)
 
-st.markdown('##### 質問')
 
 len_df = len(df)
  #乱数取得 
