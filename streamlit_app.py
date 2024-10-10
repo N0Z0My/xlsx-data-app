@@ -23,10 +23,11 @@ optionA = s_selected.loc['選択肢A']
 optionB = s_selected.loc['選択肢B']
 optionC = s_selected.loc['選択肢C']
 
-
 st.markdown(f'## {question}')
 
+options = [f"A) {optionA}", f"B) {optionB}", f"C) {optionC}"]
+
 stock = st.radio(label='回答を選択してください',
-                 options=({optionA}, {optionB}, {optionC}),
+                 options=options,
                  index=0,
-                 horizontal=True,)
+                 horizontal=True)
