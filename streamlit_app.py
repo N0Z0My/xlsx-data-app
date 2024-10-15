@@ -18,9 +18,11 @@ def evaluate_answer_with_gpt(question, options, user_answer):
     3. 以下のフォーマットで回答してください：
 
     
-    評価結果: [正解 or 不正解]
+    評価結果: {user_answer} [正解 or 不正解]
+
     正解: [適切な選択肢]
-    解説: [正解の解説]
+
+    解説: [正解の短い解説]
     """
 
     try:
