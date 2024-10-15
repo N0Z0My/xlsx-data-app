@@ -35,7 +35,6 @@ elif select_button == optionB:
 else:
    select_value = 2
 
-st.write(f'選択：{select_value}')
 
 # 数値を使用して条件分岐
 if select_value == 0:
