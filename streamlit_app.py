@@ -25,9 +25,23 @@ optionC = s_selected.loc['選択肢C']
 
 st.markdown(f'## {question}')
 
-options = [f"{optionA}", f"{optionB}", f"{optionC}"]
-
-stock = st.radio(label='回答を選択してください',
-                 options=options,
+select_button = st.radio(label='回答を選択してください',
+                 options= [f"{optionA}", f"{optionB}", f"{optionC}"],
                  index=0,
                  horizontal=True)
+
+if select_button == {optionA}:
+   select_button = 0
+if select_button == {optionB}:
+   select_button = 1
+else :
+   select_button = 2
+
+st.write(f'選択：{select_button}')
+
+if select_button.value == 0:
+  st.write("正解！")
+elif select_button.value == 1:
+  st.write("不正解！")
+elif select_button.value == 2:
+   st.write("わからない！")
