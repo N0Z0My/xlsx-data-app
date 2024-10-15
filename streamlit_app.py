@@ -3,8 +3,8 @@ import pandas as pd
 import random
 from openai import OpenAI
 
-# OpenAIクライアントの初期化
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# OpenAIの設定
+OpenAI.api_key = st.secrets["OPENAI_API_KEY"]
 
 def evaluate_answer_with_gpt(question, options, user_answer):
     prompt = f"""
@@ -23,7 +23,7 @@ def evaluate_answer_with_gpt(question, options, user_answer):
     """
 
     try:
-        response = client.chat.completions.create(
+        response = OpenAI().chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
