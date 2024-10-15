@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import random
-from openai import OpenAI
-import os
+import openai
 
-# OpenAI クライアントの初期化
-client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
+# OpenAIのAPIキーを設定
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def evaluate_answer_with_gpt(question, options, user_answer):
     prompt = f"""
@@ -24,17 +23,18 @@ def evaluate_answer_with_gpt(question, options, user_answer):
     """
 
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
+                {"role": "system", "content": "あなたは豊富に海外旅行にまつわる知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response.choices[0].message.content
+        return response.choices[0].message['content']
     except Exception as e:
         return f"エラーが発生しました: {str(e)}"
 
+# 以下、Streamlitアプリケーションのコード（変更なし）
 st.set_page_config(page_title='OpenAI-powered Quiz App')
 st.title("🎈 OpenAI-powered Radio Quiz")
 
