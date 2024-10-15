@@ -12,11 +12,8 @@ with st.expander('df', expanded=False):
     st.table(df)
 
 len_df = len(df)
-# 乱数取得 
 num = random.randint(0, len_df-1)
-# dfから行を抽出  series
 s_selected = df.loc[num]
-# seriesから値の抽出 
 question = s_selected.loc['問題']
 
 optionA = s_selected.loc['選択肢A']
@@ -30,18 +27,20 @@ select_button = st.radio(label='回答を選択してください',
                  index=0,
                  horizontal=True)
 
-if select_button == {optionA}:
-   select_button = 0
-if select_button == {optionB}:
-   select_button = 1
-else :
-   select_button = 2
+# select_buttonの値を数値に変換
+if select_button == optionA:
+   select_value = 0
+elif select_button == optionB:
+   select_value = 1
+else:
+   select_value = 2
 
-st.write(f'選択：{select_button}')
+st.write(f'選択：{select_value}')
 
-if select_button.value == 0:
+# 数値を使用して条件分岐
+if select_value == 0:
   st.write("正解！")
-elif select_button.value == 1:
+elif select_value == 1:
   st.write("不正解！")
-elif select_button.value == 2:
+elif select_value == 2:
    st.write("わからない！")
