@@ -27,19 +27,12 @@ select_button = st.radio(label='回答を選択してください',
                  index=0,
                  horizontal=True)
 
-# select_buttonの値を数値に変換
+st.write(f'選択：{select_button}')
+
+# 選択された回答と正解を比較
 if select_button == optionA:
-   select_value = 0
+    st.write("正解！")
 elif select_button == optionB:
-   select_value = 1
-else:
-   select_value = 2
-
-
-# 数値を使用して条件分岐
-if select_value == 0:
-  st.write("正解！")
-elif select_value == 1:
-  st.write("不正解！")
-elif select_value == 2:
-   st.write("わからない！")
+    st.write("不正解！")
+elif select_button == optionC:
+    st.write("わからない！")
