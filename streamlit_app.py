@@ -5,7 +5,7 @@ from openai import OpenAI
 import os
 
 # OpenAI クライアントの初期化
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
 
 def evaluate_answer_with_gpt(question, options, user_answer):
     prompt = f"""
