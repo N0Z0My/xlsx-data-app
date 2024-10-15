@@ -82,11 +82,11 @@ if st.button('回答を確定する'):
             st.session_state.score += 1
         
         st.write(f"現在のスコア: {st.session_state.score}")
-        
-        # 次の問題に進むボタン
-        if st.button('次の問題へ'):
-            st.session_state.current_question = random.randint(0, len(df)-1)
-            st.experimental_rerun()
+
+# 次の問題に進むボタンを外に移動
+if st.button('次の問題へ'):
+    st.session_state.current_question = random.randint(0, len(df)-1)
+    st.rerun()
 
 # 現在のスコアを表示
 st.sidebar.write(f"現在のスコア: {st.session_state.score}")
