@@ -12,7 +12,7 @@ def check_answer_with_gpt(question, correct_answer, user_answer):
 
     ユーザーの回答が正解と同じ意味を持つかどうかを判断し、正誤のみを回答してください：
     正誤: [正解 or 不正解]
-   
+    """
 
     response = openai.ChatCompletion.create(
         model="gpt-4",
