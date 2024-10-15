@@ -6,13 +6,14 @@ import random
 st.set_page_config(page_title='my new app')
 st.title("🎈 Radio Quiz")
 
+
+df = pd.read_excel('updatelist_kaigai.xlsx', sheet_name='sheet1', index_col=0)
+
 # セッション状態の初期化
 if 'current_question' not in st.session_state:
     st.session_state.current_question = random.randint(0, len(df)-1)
 if 'score' not in st.session_state:
     st.session_state.score = 0
-
-df = pd.read_excel('updatelist_kaigai.xlsx', sheet_name='sheet1', index_col=0)
 
 with st.expander('df', expanded=False):
     st.table(df)
@@ -23,7 +24,7 @@ question = s_selected.loc['問題']
 optionA = s_selected.loc['選択肢A']
 optionB = s_selected.loc['選択肢B']
 optionC = s_selected.loc['選択肢C']
-correct_answer = s_selected.loc['正解']  # 正解のカラムがある場合
+
 
 st.markdown(f'## {question}')
 
@@ -34,11 +35,11 @@ select_button = st.radio(label='回答を選択してください',
 
 # 回答を確定するボタン
 if st.button('回答を確定する'):
-    if select_button == correct_answer:
-        st.write("正解！")
+    if select_button == optionA:
+        st.write("えらい！")
         st.session_state.score += 1
     else:
-        st.write(f"不正解！正解は {correct_answer} でした。")
+        st.write(f"すごい！")
     
     st.write(f"現在のスコア: {st.session_state.score}")
     
