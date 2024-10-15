@@ -45,7 +45,7 @@ question = s_selected.loc['問題']
 optionA = s_selected.loc['選択肢A']
 optionB = s_selected.loc['選択肢B']
 optionC = s_selected.loc['選択肢C']
-correct_answer = s_selected.loc['正解']  # 正解のカラムがある場合
+
 
 st.markdown(f'## {question}')
 
@@ -59,15 +59,7 @@ if st.button('回答を確定する'):
     gpt_response = check_answer_with_gpt(question, correct_answer, select_button)
     st.write(gpt_response)
     
-    if "正解" in gpt_response:
-        st.session_state.score += 1
-    
-    st.write(f"現在のスコア: {st.session_state.score}")
-    
     # 次の問題に進むボタン
     if st.button('次の問題へ'):
         st.session_state.current_question = random.randint(0, len(df)-1)
         st.experimental_rerun()
-
-# 現在のスコアを表示
-st.sidebar.write(f"現在のスコア: {st.session_state.score}")
