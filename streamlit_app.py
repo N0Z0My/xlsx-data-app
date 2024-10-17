@@ -3,7 +3,6 @@ import pandas as pd
 import random
 from openai import OpenAI
 import asyncio
-import httpx
 
 # OpenAIの設定
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -26,20 +25,19 @@ async def evaluate_answer_with_gpt(question, options, user_answer):
     解説: [正解の短い解説]
     """
 
-    async with httpx.AsyncClient() as http_client:
-        try:
-            response = await client.chat.completions.create(
-                model="gpt-4",
-                temperature=0.4,
-                messages=[
-                    {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
-                    {"role": "user", "content": prompt}
-                ],
-                http_client=http_client
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"エラーが発生しました: {str(e)}"
+    try:
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
+            model="gpt-4",
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}"
 
 # Streamlitアプリケーションのコード
 st.set_page_config(page_title='🤖OpenAI-powered Quiz App')
@@ -55,8 +53,6 @@ df = load_data()
 # セッション状態の初期化
 if 'current_question' not in st.session_state:
     st.session_state.current_question = random.randint(0, len(df)-1)
-if 'score' not in st.session_state:
-    st.session_state.score = 0
 
 # 現在の問題を取得
 s_selected = df.loc[st.session_state.current_question]
@@ -81,11 +77,6 @@ if st.button('回答を確定する'):
         with st.spinner('GPT-4が回答を評価しています...'):
             gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
         st.write(gpt_response)
-        
-        if "正解" in gpt_response:
-            st.session_state.score += 1
-        
-        st.write(f"現在のスコア: {st.session_state.score}")
 
 # 次の問題に進むボタン
 if st.button('次の問題へ'):
