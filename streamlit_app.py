@@ -55,12 +55,12 @@ if 'current_question' not in st.session_state:
 if 'score' not in st.session_state:
     st.session_state.score = 0
 
-with st.expander('データフレーム', expanded=False):
-    st.dataframe(df)
+#with st.expander('データフレーム', expanded=False):
+    #st.dataframe(df)
 
 # 現在の問題を取得
 s_selected = df.loc[st.session_state.current_question]
-question = s_selected.loc['問題']
+question = s_selected.loc['質問']
 optionA = s_selected.loc['選択肢A']
 optionB = s_selected.loc['選択肢B']
 optionC = s_selected.loc['選択肢C']
