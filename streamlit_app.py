@@ -38,14 +38,14 @@ def evaluate_answer_with_gpt(question, options, user_answer):
     except Exception as e:
         return f"エラーが発生しました: {str(e)}"
 
-# 以下、Streamlitアプリケーションのコード（変更なし）
-st.set_page_config(page_title='OpenAI-powered Quiz App')
-st.title("🎈 OpenAI-powered Radio Quiz")
+# Streamlitアプリケーションのコード
+st.set_page_config(page_title='🤖OpenAI-powered Quiz App')
+st.title("💡Quiz")
 
 # データフレームの読み込み
 @st.cache_data
 def load_data():
-    return pd.read_excel('updatelist_kaigai.xlsx', sheet_name='sheet1', index_col=0)
+    return pd.read_excel('kaigai_latest.xlsx', sheet_name='sheet1', index_col=0)
 
 df = load_data()
 
