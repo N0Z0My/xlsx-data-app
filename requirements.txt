@@ -2,4 +2,4 @@ streamlit
 pandas
 openpyxl
 openai
-httpx
+asyncio
