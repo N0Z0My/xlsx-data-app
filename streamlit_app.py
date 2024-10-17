@@ -51,11 +51,14 @@ def load_data():
 df = load_data()
 
 # セッション状態の初期化
-if 'current_question' not in st.session_state:
-    st.session_state.current_question = random.randint(0, len(df)-1)
+if 'shuffled_questions' not in st.session_state:
+    st.session_state.shuffled_questions = list(range(len(df)))
+    random.shuffle(st.session_state.shuffled_questions)
+    st.session_state.question_index = 0
 
 # 現在の問題を取得
-s_selected = df.loc[st.session_state.current_question]
+current_question = st.session_state.shuffled_questions[st.session_state.question_index]
+s_selected = df.loc[current_question]
 question = s_selected.loc['質問']
 optionA = s_selected.loc['選択肢A']
 optionB = s_selected.loc['選択肢B']
@@ -80,5 +83,8 @@ if st.button('回答を確定する'):
 
 # 次の問題に進むボタン
 if st.button('次の問題へ'):
-    st.session_state.current_question = random.randint(0, len(df)-1)
+    st.session_state.question_index += 1
+    if st.session_state.question_index >= len(df):
+        st.session_state.question_index = 0
+        random.shuffle(st.session_state.shuffled_questions)
     st.rerun()
