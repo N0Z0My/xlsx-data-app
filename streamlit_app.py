@@ -3,10 +3,10 @@ import pandas as pd
 import random
 from openai import OpenAI
 import asyncio
-import aiohttp
+import httpx
 
 # OpenAIの設定
-OpenAI.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 async def evaluate_answer_with_gpt(question, options, user_answer):
     prompt = f"""
@@ -26,8 +26,7 @@ async def evaluate_answer_with_gpt(question, options, user_answer):
     解説: [正解の短い解説]
     """
 
-    async with aiohttp.ClientSession() as session:
-        client = OpenAI(http_client=session)
+    async with httpx.AsyncClient() as http_client:
         try:
             response = await client.chat.completions.create(
                 model="gpt-4",
@@ -35,7 +34,8 @@ async def evaluate_answer_with_gpt(question, options, user_answer):
                 messages=[
                     {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
                     {"role": "user", "content": prompt}
-                ]
+                ],
+                http_client=http_client
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -91,6 +91,3 @@ if st.button('回答を確定する'):
 if st.button('次の問題へ'):
     st.session_state.current_question = random.randint(0, len(df)-1)
     st.rerun()
-
-# 現在のスコアを表示
-st.sidebar.write(f"現在のスコア: {st.session_state.score}")
