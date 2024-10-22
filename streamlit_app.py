@@ -17,8 +17,36 @@ if 'total_attempted' not in st.session_state:
     st.session_state.total_attempted = 0
 
 async def evaluate_answer_with_gpt(question, options, user_answer):
-    # 既存のevaluate_answer_with_gpt関数をそのまま使用
-    # ...（変更なし）
+    prompt = f"""
+    問題: {question}
+    選択肢: {options}
+    ユーザーの回答: {user_answer}
+
+    以下の手順でユーザーの回答を評価してください：
+    1. 問題文と選択肢から最も適切な選択肢を１つ選んでください。
+    2. ユーザーの回答が最も適切な選択肢と一致するか評価してください。
+    3. 以下のフォーマットで回答してください：
+
+    あなたの回答: {user_answer} [正解 or 不正解]
+
+    正解: [適切な選択肢]
+
+    解説: [正解の短い解説]
+    """
+
+    try:
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
+            model="gpt-4",
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": "あなたは海外旅行の豊富な知識を持っていて、ユーザーの回答を評価する優秀な採点者です。"},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}"
 
 # データフレームの読み込み
 @st.cache_data
