@@ -314,4 +314,22 @@ def show_quiz_screen():
 
     if st.button('次の問題へ'):
         logger.info(f"次の問題へ進む - 現在の問題番号: {current_question + 1}")
-        st.session
+        st.session_state.question_index += 1
+        if st.session_state.question_index >= len(df):
+            st.session_state.screen = 'result'  # 全問題が終わったら結果画面へ
+        st.rerun()
+
+# メイン処理
+df = load_data()
+if st.session_state.screen == 'quiz':
+    show_quiz_screen()
+elif st.session_state.screen == 'result':
+    show_result_screen()
+elif st.session_state.screen == 'admin':
+    show_admin_screen()
+
+# サイドバーに管理者画面へのリンクを追加
+with st.sidebar:
+    if st.button("👤 管理者画面"):
+        st.session_state.screen = 'admin'
+        st.rerun()
