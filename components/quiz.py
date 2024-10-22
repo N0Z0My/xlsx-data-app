@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components  # この行を追加
 from utils.logger import logger
 from utils.gpt import evaluate_answer_with_gpt
 import asyncio
@@ -51,7 +52,7 @@ def handle_answer(select_button, question, options, current_question):
 
 def show_answer_animation(is_correct):
     st.markdown("---")
-    components.v1.html(  
+    components.html(
         f"""
         <div id="quiz-result-root" data-correct="{str(is_correct).lower()}"></div>
         """,
