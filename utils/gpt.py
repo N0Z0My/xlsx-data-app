@@ -14,7 +14,7 @@ async def evaluate_answer_with_gpt(question, options, user_answer):
     以下の手順でユーザーの回答を評価し、必ず指定された形式で回答してください：
     1. 問題文と選択肢から最も適切な選択肢を１つ選んでください。
     2. ユーザーの回答が最も適切な選択肢と一致するか評価してください。
-    3. 以下の形式で厳密に回答してください：
+    3. 以下のフォーマットを厳密に守って回答してください：
 
     RESULT:[CORRECT] または RESULT:[INCORRECT]
     
