@@ -52,12 +52,36 @@ def handle_answer(select_button, question, options, current_question):
 
 def show_answer_animation(is_correct):
     st.markdown("---")
-    components.html(
-        f"""
-        <div id="quiz-result-root" data-correct="{str(is_correct).lower()}"></div>
-        """,
-        height=200
-    )
+    if is_correct:
+        # 正解時の表示
+        st.markdown("""
+        <div style='padding: 20px; background-color: #E7F7E7; border-radius: 10px; border-left: 5px solid #28a745;'>
+            <h2 style='color: #28a745; margin: 0; display: flex; align-items: center; gap: 10px;'>
+                <span>🎉 正解！</span>
+                <span style='font-size: 16px; background-color: #28a745; color: white; padding: 3px 10px; border-radius: 15px;'>
+                    +1 point
+                </span>
+            </h2>
+            <p style='color: #2E7D32; margin-top: 10px;'>
+                素晴らしい判断です！この知識は実際の旅行で役立つはずです。
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # 不正解時の表示
+        st.markdown("""
+        <div style='padding: 20px; background-color: #FEEDED; border-radius: 10px; border-left: 5px solid #dc3545;'>
+            <h2 style='color: #dc3545; margin: 0;'>💫 惜しい！</h2>
+            <p style='color: #712B2B; margin-top: 10px;'>
+                間違いから学ぶことで、より深い知識が身につきます。
+            </p>
+            <div style='background-color: rgba(255,255,255,0.7); padding: 10px; border-radius: 5px; margin-top: 10px;'>
+                <span style='font-weight: bold; color: #dc3545;'>ワンポイント:</span>
+                <br>
+                解説をよく読んで、次の問題に活かしましょう！
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def process_answer(is_correct, current_question, select_button, gpt_response):
     if is_correct and current_question not in st.session_state.answered_questions:
