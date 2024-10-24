@@ -1,23 +1,37 @@
 import streamlit as st
-import streamlit.components.v1 as components  # この行を追加
-from utils.logger import logger
+import streamlit.components.v1 as components
+from utils.logger import get_user_logger
 from utils.gpt import evaluate_answer_with_gpt
 import asyncio
 
+# 問題数の制限を定数として定義
+MAX_QUESTIONS = 20
+
 def show_quiz_screen(df):
+    logger = get_user_logger()
+    
     st.title("##💡Quiz")
     
     if 'answered_questions' not in st.session_state:
         st.session_state.answered_questions = set()
     
-    st.progress(st.session_state.question_index / len(df))
-    st.write(f"##問題 {st.session_state.question_index + 1} / {len(df)}")
+    # 進捗バーを20問中の進捗に変更
+    current_progress = min(st.session_state.question_index, MAX_QUESTIONS)
+    st.progress(current_progress / MAX_QUESTIONS)
+    st.write(f"##問題 {st.session_state.question_index + 1} / {MAX_QUESTIONS}")
+    
+    # 20問終了したら結果画面へ
+    if st.session_state.total_attempted >= MAX_QUESTIONS:
+        logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了")
+        st.session_state.screen = 'result'
+        st.rerun()
+        return
     
     current_question = st.session_state.question_index
     
     if current_question in st.session_state.answered_questions:
         st.session_state.question_index += 1
-        if st.session_state.question_index >= len(df):
+        if st.session_state.total_attempted >= MAX_QUESTIONS:
             st.session_state.screen = 'result'
         st.rerun()
         return
@@ -26,7 +40,7 @@ def show_quiz_screen(df):
     question = s_selected.loc['質問']
     options = [s_selected.loc[f'選択肢{opt}'] for opt in ['A', 'B', 'C']]
 
-    logger.info(f"問題表示 - 問題番号: {current_question + 1}, 問題: {question}")
+    logger.info(f"ユーザー[{st.session_state.nickname}] - 問題表示 - 問題番号: {current_question + 1}, 問題: {question}")
 
     st.markdown(f'## {question}')
 
@@ -35,11 +49,13 @@ def show_quiz_screen(df):
     if st.button('回答を確定する'):
         handle_answer(select_button, question, options, current_question)
 
-    show_navigation_buttons(current_question, len(df))
+    show_navigation_buttons(current_question)
 
 def handle_answer(select_button, question, options, current_question):
+    logger = get_user_logger()
+    
     if select_button is None:
-        logger.warning("回答が選択されていません")
+        logger.warning(f"ユーザー[{st.session_state.nickname}] - 回答が選択されていません")
         st.warning('回答を選択してください。')
         return
 
@@ -53,7 +69,6 @@ def handle_answer(select_button, question, options, current_question):
 def show_answer_animation(is_correct):
     st.markdown("---")
     if is_correct:
-        # 正解時の表示
         st.markdown("""
         <div style='padding: 20px; background-color: #E7F7E7; border-radius: 10px; border-left: 5px solid #28a745;'>
             <h2 style='color: #28a745; margin: 0; display: flex; align-items: center; gap: 10px;'>
@@ -68,7 +83,6 @@ def show_answer_animation(is_correct):
         </div>
         """, unsafe_allow_html=True)
     else:
-        # 不正解時の表示
         st.markdown("""
         <div style='padding: 20px; background-color: #FEEDED; border-radius: 10px; border-left: 5px solid #dc3545;'>
             <h2 style='color: #dc3545; margin: 0;'>💫 惜しい！</h2>
@@ -84,11 +98,13 @@ def show_answer_animation(is_correct):
         """, unsafe_allow_html=True)
 
 def process_answer(is_correct, current_question, select_button, gpt_response):
+    logger = get_user_logger()
+    
     if is_correct and current_question not in st.session_state.answered_questions:
         st.session_state.correct_count += 1
-        logger.info(f"正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
+        logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
     else:
-        logger.info(f"不正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
+        logger.info(f"ユーザー[{st.session_state.nickname}] - 不正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
     
     display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
     st.write(display_response)
@@ -96,16 +112,20 @@ def process_answer(is_correct, current_question, select_button, gpt_response):
     st.session_state.answered_questions.add(current_question)
     st.session_state.total_attempted += 1
 
-def show_navigation_buttons(current_question, total_questions):
-    is_last_question = current_question == total_questions - 1
+def show_navigation_buttons(current_question):
+    logger = get_user_logger()
+    remaining_questions = MAX_QUESTIONS - st.session_state.total_attempted
     
-    if is_last_question:
+    # 残り問題数の表示
+    st.write(f"残り {remaining_questions} 問")
+    
+    if st.session_state.total_attempted >= MAX_QUESTIONS:
         if st.button('結果を見る 🎉'):
-            logger.info("クイズ終了 - 結果画面へ遷移")
+            logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了 - 結果画面へ遷移")
             st.session_state.screen = 'result'
             st.rerun()
     else:
         if st.button('次の問題へ ➡️'):
-            logger.info(f"次の問題へ進む - 現在の問題番号: {current_question + 1}")
+            logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {current_question + 1}")
             st.session_state.question_index += 1
             st.rerun()
