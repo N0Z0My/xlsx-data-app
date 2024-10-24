@@ -38,30 +38,21 @@ def load_data():
 
 def show_sidebar():
     with st.sidebar:
-        st.markdown("### メニュー")
-        # ログイン済みの場合のみ管理者画面とログアウトボタンを表示
-        if st.session_state.nickname:
-            if st.button("管理者画面"):
-                st.session_state.screen = 'admin'
+        # ログイン状態に関わらず管理者画面ボタンを表示
+        if st.button("管理者画面"):
+            st.session_state.screen = 'admin'
+            if st.session_state.nickname:  # ログイン済みの場合のみログを記録
                 get_user_logger().info(f"ユーザー[{st.session_state.nickname}]が管理者画面に移動しました")
-                st.rerun()
-            
+            st.rerun()
+        
+        # ログイン済みの場合のみログアウトボタンを表示
+        if st.session_state.nickname:
             if st.button("ログアウト"):
                 get_user_logger().info(f"ユーザー[{st.session_state.nickname}]がログアウトしました")
                 st.session_state.nickname = None
                 st.session_state.logger = None
                 st.session_state.screen = 'login'
                 st.rerun()
-        else:
-            # ログイン前はアプリケーションの説明などを表示
-            st.markdown("""
-            ### アプリケーションについて
-            このアプリケーションは、クイズを通じて学習するための
-            プラットフォームです。
-
-            始めるには、メイン画面でニックネームを
-            入力してください。
-            """)
 
 def show_login_screen():
     st.title("ログイン")
@@ -80,7 +71,7 @@ def main():
     # セッション状態の初期化
     init_session_state()
 
-    # サイドバーの表示（ログイン前後で表示を変える）
+    # サイドバーの表示
     show_sidebar()
 
     # ユーザーがログインしていない場合はログイン画面を表示
