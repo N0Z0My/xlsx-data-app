@@ -29,7 +29,7 @@ def get_user_logger():
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_excel('kaigai_latest.xlsx', sheet_name='sheet1', index_col=0)
+        df = pd.read_excel('f_kaigai.xlsx', sheet_name='sheet1', index_col=0)
         get_user_logger().info(f"データ読み込み成功: {len(df)}問の問題を読み込みました")
         return df
     except Exception as e:
