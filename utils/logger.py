@@ -8,19 +8,12 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.absolute()
 
 def get_log_files():
-    """
-    ログディレクトリ内のログファイル一覧を取得する
-    
-    Returns:
-    --------
-    list: ログファイルのリスト（新しい順）
-    """
+    """ログファイル一覧を取得"""
     log_dir = os.path.join(ROOT_DIR, 'logs')
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
         return []
     
-    # ログファイルを日付の新しい順にソート
     return sorted(
         [f for f in os.listdir(log_dir) if f.endswith('.log')],
         reverse=True
@@ -29,51 +22,32 @@ def get_log_files():
 def setup_logger(
     log_dir='logs',
     app_name='quiz_app',
-    df_name='default_df',
     log_level=logging.INFO
 ):
-    """
-    ロギング設定を行う関数
-    
-    Parameters:
-    -----------
-    log_dir : str
-        ログファイルを保存するディレクトリ
-    app_name : str
-        アプリケーション名
-    df_name : str
-        データフレーム名
-    log_level : int
-        ロギングレベル
+    """新しいロガーインスタンスを設定して返す"""
+    # 既存のロガーがある場合はそれを返す
+    logger = logging.getLogger('xlsx_data_app')
+    if logger.handlers:
+        return logger
         
-    Returns:
-    --------
-    logging.Logger: 設定済みのロガーインスタンス
-    """
     try:
-        # 絶対パスでログディレクトリを指定
+        # ログディレクトリの設定
         log_dir = os.path.join(ROOT_DIR, log_dir)
         os.makedirs(log_dir, exist_ok=True)
         
-        # ログファイル名の生成
+        # 新しいログファイル名を生成
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         log_filename = os.path.join(
             log_dir, 
             f"{app_name}_{timestamp}.log"
         )
         
-        # ロガーの取得と設定
-        logger = logging.getLogger('xlsx_data_app')
         logger.setLevel(log_level)
-        
-        # 既存のハンドラをクリア（重複を防ぐ）
-        if logger.hasHandlers():
-            logger.handlers.clear()
         
         # ファイルハンドラの設定
         file_handler = RotatingFileHandler(
             log_filename,
-            maxBytes=5*1024*1024,  # 5MB
+            maxBytes=5*1024*1024,
             backupCount=5,
             encoding='utf-8'
         )
@@ -91,11 +65,11 @@ def setup_logger(
         file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
         
-        # ハンドラの追加
+        # ハンドラを追加
         logger.addHandler(file_handler)
         logger.addHandler(console_handler)
         
-        logger.info(f"ログファイルを作成しました: {log_filename}")
+        logger.info(f"新しいログセッションを開始しました: {log_filename}")
         
         return logger
         
@@ -103,7 +77,7 @@ def setup_logger(
         print(f"ログ設定中にエラーが発生しました: {str(e)}")
         raise
 
-# デフォルトのロガーを作成
+# グローバルなロガーインスタンス
 logger = setup_logger()
 
 # 外部からインポート可能な変数・関数

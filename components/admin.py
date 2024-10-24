@@ -53,7 +53,7 @@ def show_log_content(log_file):
         try:
             log_path = os.path.join(ROOT_DIR, 'logs', log_file)
             with open(log_path, 'r', encoding='utf-8') as f:
-                log_contents = f.read()
+                log_contents = f.read().strip()
             st.text_area("ログ内容", log_contents, height=500)
         except Exception as e:
             logger.error(f"ログの読み込みに失敗: {str(e)}")
@@ -112,7 +112,7 @@ def parse_log_file(log_file):
     current_timestamp = None
     
     for line in log_contents:
-        timestamp_match = re.match(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})', line)
+        timestamp_match = re.match(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
         if timestamp_match:
             current_timestamp = timestamp_match.group(1)
         
@@ -165,25 +165,3 @@ def display_statistics(log_data):
         file_name="quiz_statistics.csv",
         mime="text/csv"
     )
-
-    # 詳細分析
-    st.subheader("詳細分析")
-    
-    # 時間帯別の統計
-    df_log['hour'] = pd.to_datetime(df_log['timestamp']).dt.hour
-    hourly_stats = df_log.groupby('hour')['result'].agg({
-        '回答数': 'count',
-        '正解数': lambda x: (x == '正解').sum()
-    }).reset_index()
-    
-    st.write("時間帯別の統計")
-    st.dataframe(hourly_stats)
-    
-    # 問題別の統計
-    question_stats = df_log.groupby('question_number')['result'].agg({
-        '回答数': 'count',
-        '正解数': lambda x: (x == '正解').sum()
-    }).reset_index()
-    
-    st.write("問題別の統計")
-    st.dataframe(question_stats)
