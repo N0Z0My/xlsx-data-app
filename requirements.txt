@@ -4,3 +4,4 @@ openpyxl
 openai
 asyncio
 pytz
+python-dateutil
