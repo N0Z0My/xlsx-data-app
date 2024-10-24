@@ -38,14 +38,12 @@ def load_data():
 
 def show_sidebar():
     with st.sidebar:
-        # ログイン状態に関わらず管理者画面ボタンを表示
         if st.button("管理者画面"):
             st.session_state.screen = 'admin'
             if st.session_state.nickname:  # ログイン済みの場合のみログを記録
                 get_user_logger().info(f"ユーザー[{st.session_state.nickname}]が管理者画面に移動しました")
             st.rerun()
         
-        # ログイン済みの場合のみログアウトボタンを表示
         if st.session_state.nickname:
             if st.button("ログアウト"):
                 get_user_logger().info(f"ユーザー[{st.session_state.nickname}]がログアウトしました")
@@ -74,18 +72,14 @@ def main():
     # サイドバーの表示
     show_sidebar()
 
-    # ユーザーがログインしていない場合はログイン画面を表示
-    if st.session_state.nickname is None:
-        show_login_screen()
-        return
-
-    # データの読み込み
-    df = load_data()
-
-    # 現在の画面に応じて表示を切り替え
+    # 画面の表示を切り替え
     if st.session_state.screen == 'admin':
         show_admin_screen()
+    elif st.session_state.nickname is None:
+        show_login_screen()
     else:
+        # データの読み込み
+        df = load_data()
         show_quiz_screen(df)
 
 if __name__ == "__main__":
