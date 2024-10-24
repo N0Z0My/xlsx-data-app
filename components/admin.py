@@ -2,12 +2,16 @@ import streamlit as st
 import pandas as pd
 import os
 import re
-from utils.logger import logger
+from pathlib import Path
+from utils.logger import logger, get_log_files
+
+# プロジェクトのルートディレクトリを取得
+ROOT_DIR = Path(__file__).parent.parent.absolute()
 
 def show_admin_screen():
+    """管理者画面のメイン表示"""
     st.title("管理者画面 📊")
     
-    # タブの作成
     tab1, tab2 = st.tabs(["📝 ログ閲覧", "📊 統計情報"])
 
     with tab1:
@@ -21,6 +25,7 @@ def show_admin_screen():
         st.rerun()
 
 def show_log_viewer():
+    """ログ閲覧画面の表示"""
     st.header("ログ閲覧")
     
     log_files = get_log_files()
@@ -42,7 +47,37 @@ def show_log_viewer():
     with col2:
         provide_log_download(selected_log)
 
+def show_log_content(log_file):
+    """ログファイルの内容を表示"""
+    if st.button("ログを表示"):
+        try:
+            log_path = os.path.join(ROOT_DIR, 'logs', log_file)
+            with open(log_path, 'r', encoding='utf-8') as f:
+                log_contents = f.read()
+            st.text_area("ログ内容", log_contents, height=500)
+        except Exception as e:
+            logger.error(f"ログの読み込みに失敗: {str(e)}")
+            st.error(f"ログの読み込みに失敗しました: {str(e)}")
+
+def provide_log_download(log_file):
+    """ログファイルのダウンロード機能"""
+    if st.button("ログをダウンロード"):
+        try:
+            log_path = os.path.join(ROOT_DIR, 'logs', log_file)
+            with open(log_path, 'r', encoding='utf-8') as f:
+                log_contents = f.read()
+            st.download_button(
+                label="📥 ログファイルをダウンロード",
+                data=log_contents,
+                file_name=log_file,
+                mime="text/plain"
+            )
+        except Exception as e:
+            logger.error(f"ログファイルの準備に失敗: {str(e)}")
+            st.error(f"ログファイルの準備に失敗しました: {str(e)}")
+
 def show_statistics():
+    """統計情報画面の表示"""
     st.header("統計情報")
     
     log_files = get_log_files()
@@ -63,36 +98,13 @@ def show_statistics():
         else:
             st.info("まだ回答データがありません")
     except Exception as e:
+        logger.error(f"統計情報の集計に失敗: {str(e)}")
         st.error(f"統計情報の集計に失敗しました: {str(e)}")
 
-def get_log_files():
-    return sorted([f for f in os.listdir('logs') if f.startswith('quiz_app_')], reverse=True)
-
-def show_log_content(log_file):
-    if st.button("ログを表示"):
-        try:
-            with open(f"logs/{log_file}", 'r', encoding='utf-8') as f:
-                log_contents = f.read()
-            st.text_area("ログ内容", log_contents, height=500)
-        except Exception as e:
-            st.error(f"ログの読み込みに失敗しました: {str(e)}")
-
-def provide_log_download(log_file):
-    if st.button("ログをダウンロード"):
-        try:
-            with open(f"logs/{log_file}", 'r', encoding='utf-8') as f:
-                log_contents = f.read()
-            st.download_button(
-                label="📥 ログファイルをダウンロード",
-                data=log_contents,
-                file_name=log_file,
-                mime="text/plain"
-            )
-        except Exception as e:
-            st.error(f"ログファイルの準備に失敗しました: {str(e)}")
-
 def parse_log_file(log_file):
-    with open(f"logs/{log_file}", 'r', encoding='utf-8') as f:
+    """ログファイルを解析してデータを抽出"""
+    log_path = os.path.join(ROOT_DIR, 'logs', log_file)
+    with open(log_path, 'r', encoding='utf-8') as f:
         log_contents = f.readlines()
     
     log_data = []
@@ -125,25 +137,10 @@ def parse_log_file(log_file):
     return log_data
 
 def display_statistics(log_data):
+    """統計情報の表示"""
     df_log = pd.DataFrame(log_data)
     
     # 基本統計
-    display_basic_stats(df_log)
-    
-    # エラー数の表示
-    display_error_count(df_log)
-    
-    # データプレビュー
-    st.subheader("データプレビュー")
-    st.dataframe(df_log.head())
-    
-    # CSVダウンロード
-    provide_csv_download(df_log)
-    
-    # 詳細分析
-    display_detailed_analysis(df_log)
-
-def display_basic_stats(df_log):
     correct_answers = len(df_log[df_log['result'] == '正解'])
     total_attempts = len(df_log)
     accuracy = (correct_answers / total_attempts) * 100 if total_attempts > 0 else 0
@@ -155,47 +152,38 @@ def display_basic_stats(df_log):
         st.metric(label="正解数", value=correct_answers)
     with col3:
         st.metric(label="正答率", value=f"{accuracy:.1f}%")
-
-def display_error_count(df_log):
-    try:
-        with open(f"logs/{selected_log}", 'r', encoding='utf-8') as f:
-            errors = len([line for line in f if "ERROR" in line])
-        if errors > 0:
-            st.warning(f"エラー発生回数: {errors}回")
-    except Exception:
-        pass
-
-def provide_csv_download(df_log):
+    
+    # データプレビュー
+    st.subheader("データプレビュー")
+    st.dataframe(df_log)
+    
+    # CSVダウンロード
     csv = df_log.to_csv(index=False)
     st.download_button(
         label="📥 CSVファイルをダウンロード",
         data=csv,
-        file_name=f"quiz_statistics.csv",
+        file_name="quiz_statistics.csv",
         mime="text/csv"
     )
 
-def display_detailed_analysis(df_log):
+    # 詳細分析
     st.subheader("詳細分析")
     
     # 時間帯別の統計
     df_log['hour'] = pd.to_datetime(df_log['timestamp']).dt.hour
-    hourly_stats = calculate_hourly_stats(df_log)
+    hourly_stats = df_log.groupby('hour')['result'].agg({
+        '回答数': 'count',
+        '正解数': lambda x: (x == '正解').sum()
+    }).reset_index()
+    
     st.write("時間帯別の統計")
     st.dataframe(hourly_stats)
     
     # 問題別の統計
-    question_stats = calculate_question_stats(df_log)
+    question_stats = df_log.groupby('question_number')['result'].agg({
+        '回答数': 'count',
+        '正解数': lambda x: (x == '正解').sum()
+    }).reset_index()
+    
     st.write("問題別の統計")
     st.dataframe(question_stats)
-
-def calculate_hourly_stats(df_log):
-    return df_log.groupby('hour')['result'].agg({
-        '回答数': 'count',
-        '正解数': lambda x: (x == '正解').sum()
-    }).reset_index()
-
-def calculate_question_stats(df_log):
-    return df_log.groupby('question_number')['result'].agg({
-        '回答数': 'count',
-        '正解数': lambda x: (x == '正解').sum()
-    }).reset_index()
