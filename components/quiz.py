@@ -26,7 +26,7 @@ def show_quiz_screen(df):
     st.write(f"## 問題 {st.session_state.question_index + 1} / {MAX_QUESTIONS}")
     
     # 20問完了時の処理
-    if st.session_state.total_attempted >= MAX_QUESTIONS:
+    if st.session_state.question_index >= MAX_QUESTIONS:
         logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了")
         # 結果データの保存
         st.session_state.quiz_results = {
