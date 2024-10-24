@@ -16,6 +16,8 @@ def init_session_state():
     if 'total_attempted' not in st.session_state:
         st.session_state.total_attempted = 0
 
+logger.info("Streamlitアプリケーションを開始します")
+
 @st.cache_data
 def load_data():
     try:
