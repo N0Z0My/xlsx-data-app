@@ -29,13 +29,16 @@ def load_data():
         raise
 
 def main():
+    # セッション状態の初期化を最初に行う
+    init_session_state()  # この行を追加
+
     # セッション開始時のみログを記録
     if 'session_initialized' not in st.session_state:
         logger.info("アプリケーションを開始します")
         st.session_state.session_initialized = True
 
-    # ここでデータを読み込む
-    df = load_data()  # この1行を追加
+    # データの読み込み
+    df = load_data()
 
     # 画面の状態管理
     if 'screen' not in st.session_state:
@@ -45,7 +48,7 @@ def main():
     if st.session_state.screen == 'admin':
         show_admin_screen()
     else:
-        show_quiz_screen(df)  # dfを渡すように修正
+        show_quiz_screen(df)
 
 
 if __name__ == "__main__":
