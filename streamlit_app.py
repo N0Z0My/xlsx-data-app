@@ -8,7 +8,7 @@ from utils.logger import setup_logger
 # セッション状態の初期化
 def init_session_state():
     if 'screen' not in st.session_state:
-        st.session_state.screen = 'login'  # デフォルト画面をloginに変更
+        st.session_state.screen = 'login'
     if 'question_index' not in st.session_state:
         st.session_state.question_index = 0
     if 'correct_count' not in st.session_state:
@@ -36,6 +36,33 @@ def load_data():
         get_user_logger().error(f"データ読み込みエラー: {str(e)}")
         raise
 
+def show_sidebar():
+    with st.sidebar:
+        st.markdown("### メニュー")
+        # ログイン済みの場合のみ管理者画面とログアウトボタンを表示
+        if st.session_state.nickname:
+            if st.button("管理者画面"):
+                st.session_state.screen = 'admin'
+                get_user_logger().info(f"ユーザー[{st.session_state.nickname}]が管理者画面に移動しました")
+                st.rerun()
+            
+            if st.button("ログアウト"):
+                get_user_logger().info(f"ユーザー[{st.session_state.nickname}]がログアウトしました")
+                st.session_state.nickname = None
+                st.session_state.logger = None
+                st.session_state.screen = 'login'
+                st.rerun()
+        else:
+            # ログイン前はアプリケーションの説明などを表示
+            st.markdown("""
+            ### アプリケーションについて
+            このアプリケーションは、クイズを通じて学習するための
+            プラットフォームです。
+
+            始めるには、メイン画面でニックネームを
+            入力してください。
+            """)
+
 def show_login_screen():
     st.title("ログイン")
     with st.form("login_form"):
@@ -53,24 +80,13 @@ def main():
     # セッション状態の初期化
     init_session_state()
 
+    # サイドバーの表示（ログイン前後で表示を変える）
+    show_sidebar()
+
     # ユーザーがログインしていない場合はログイン画面を表示
     if st.session_state.nickname is None:
         show_login_screen()
         return
-
-    # サイドバーに管理者画面ボタンとログアウトボタンを追加
-    with st.sidebar:
-        if st.button("管理者画面"):
-            st.session_state.screen = 'admin'
-            get_user_logger().info(f"ユーザー[{st.session_state.nickname}]が管理者画面に移動しました")
-            st.rerun()
-        
-        if st.button("ログアウト"):
-            get_user_logger().info(f"ユーザー[{st.session_state.nickname}]がログアウトしました")
-            st.session_state.nickname = None
-            st.session_state.logger = None
-            st.session_state.screen = 'login'
-            st.rerun()
 
     # データの読み込み
     df = load_data()
