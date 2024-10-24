@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from components.quiz import show_quiz_screen
-#from components.result import show_result_screen
+from components.result import show_result_screen
 from components.admin import show_admin_screen
 from utils.logger import logger
 
@@ -34,6 +34,9 @@ def main():
         logger.info("アプリケーションを開始します")
         st.session_state.session_initialized = True
 
+    # ここでデータを読み込む
+    df = load_data()  # この1行を追加
+
     # 画面の状態管理
     if 'screen' not in st.session_state:
         st.session_state.screen = 'quiz'
@@ -42,7 +45,7 @@ def main():
     if st.session_state.screen == 'admin':
         show_admin_screen()
     else:
-        show_quiz_screen()  # クイズ画面の表示関数
+        show_quiz_screen(df)  # dfを渡すように修正
 
 
 if __name__ == "__main__":
