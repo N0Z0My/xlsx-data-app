@@ -29,8 +29,14 @@ def load_data():
         raise
 
 def main():
-    # セッション状態の初期化を最初に行う
-    init_session_state()  # この行を追加
+    # セッション状態の初期化
+    init_session_state()
+
+    # サイドバーに管理者画面ボタンを追加
+    with st.sidebar:
+        if st.button("管理者画面"):
+            st.session_state.screen = 'admin'
+            st.rerun()
 
     # セッション開始時のみログを記録
     if 'session_initialized' not in st.session_state:
