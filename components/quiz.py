@@ -11,7 +11,7 @@ def show_quiz_screen(df):
     # ユーザーIDとしてニックネームを使用
     logger = get_user_logger(st.session_state.nickname)
     
-    st.title("## 💡Quiz")
+    st.title("💡Quiz")
     
     if 'answered_questions' not in st.session_state:
         st.session_state.answered_questions = set()
