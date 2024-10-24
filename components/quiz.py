@@ -5,13 +5,13 @@ from utils.gpt import evaluate_answer_with_gpt
 import asyncio
 
 def show_quiz_screen(df):
-    st.title("💡Quiz")
+    st.title("##💡Quiz")
     
     if 'answered_questions' not in st.session_state:
         st.session_state.answered_questions = set()
     
     st.progress(st.session_state.question_index / len(df))
-    st.write(f"問題 {st.session_state.question_index + 1} / {len(df)}")
+    st.write(f"##問題 {st.session_state.question_index + 1} / {len(df)}")
     
     current_question = st.session_state.question_index
     
