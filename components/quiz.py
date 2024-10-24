@@ -24,9 +24,12 @@ def show_quiz_screen(df):
     current_progress = min(st.session_state.question_index, MAX_QUESTIONS)
     st.progress(current_progress / MAX_QUESTIONS)
     st.write(f"## 問題 {st.session_state.question_index + 1} / {MAX_QUESTIONS}")
+
+    current_question = st.session_state.question_index
     
     # 20問完了時の処理
-    if st.session_state.question_index >= MAX_QUESTIONS:
+    #if st.session_state.question_index >= MAX_QUESTIONS:
+    if current_question >= MAX_QUESTIONS:
         logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了")
         # 結果データの保存
         st.session_state.quiz_results = {
@@ -38,7 +41,7 @@ def show_quiz_screen(df):
         st.rerun()
         return
     
-    current_question = st.session_state.question_index
+    
     
     # 既に回答済みの問題をスキップ
     if current_question in st.session_state.answered_questions:
