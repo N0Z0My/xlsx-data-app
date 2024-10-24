@@ -69,7 +69,7 @@ def show_navigation_buttons(current_question):
     logger = get_user_logger(st.session_state.nickname)
     remaining_questions = MAX_QUESTIONS - st.session_state.total_attempted
     
-    st.write(f"残り {remaining_questions} 問")
+    #st.write(f"残り {remaining_questions} 問")
     
     if st.session_state.total_attempted >= MAX_QUESTIONS:
         if st.button('結果を見る 🎉'):
