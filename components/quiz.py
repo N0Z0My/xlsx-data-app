@@ -73,7 +73,7 @@ def show_quiz_screen(df, logger=None):
         
         handle_answer(select_button, question, options, current_question, logger)
 
-    show_navigation_buttons(current_question,logger)
+    show_navigation_buttons(current_question, logger)
 
 def handle_answer(select_button, question, options, current_question, logger):
     with st.spinner('GPT-4が回答を評価しています...'):
@@ -91,7 +91,7 @@ def handle_answer(select_button, question, options, current_question, logger):
         'explanation': gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
     }
     
-    process_answer(is_correct, current_question, select_button, gpt_response)
+    process_answer(is_correct, current_question, select_button, gpt_response, logger)  # loggerを追加
 
 def show_answer_animation(is_correct):
     st.markdown("---")
@@ -142,7 +142,6 @@ def show_navigation_buttons(current_question, logger):
                 st.rerun()
 
 def process_answer(is_correct, current_question, select_button, gpt_response, logger):
-    
     if is_correct and current_question not in st.session_state.answered_questions:
         st.session_state.correct_count += 1
         logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
