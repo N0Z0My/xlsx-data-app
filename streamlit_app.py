@@ -85,24 +85,32 @@ def show_login_screen():
 def main():
     # 初期化処理
     init_session_state()
-
+    
     # デバッグ出力
     st.write("Current screen:", st.session_state.screen)
     st.write("Current nickname:", st.session_state.nickname)
-
+    
     # サイドバーの表示
     show_sidebar()
-
+    
     # 画面の表示を切り替え
     if st.session_state.screen == 'admin':
         show_admin_screen()
     elif st.session_state.nickname is None:
         show_login_screen()
     else:
+        # ロガーの初期化を確実に行う
+        if not init_logger():
+            st.error("ロガーの初期化に失敗しました。")
+            return
+            
         # データの読み込み
         df = load_data()
         if df is not None:
-            show_quiz_screen(df, st.session_state.logger)
+            show_quiz_screen(
+                df=df,
+                logger=st.session_state.logger  # 確実に初期化されたloggerを渡す
+            )
         else:
             st.error("問題データを読み込めませんでした。")
 

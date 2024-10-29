@@ -13,9 +13,13 @@ def show_quiz_screen(df, logger=None):
     Args:
         df: クイズデータを含むDataFrame
         logger: ログを記録するロガーオブジェクト
-    """    
-    st.title("💡Quiz")
+    """  
     
+    if logger is None:
+        logger = setup_logger(user_id=st.session_state.get('nickname'))
+          
+    st.title("💡Quiz")
+
     # セッション状態の初期化
     if 'answered_questions' not in st.session_state:
         st.session_state.answered_questions = set()
@@ -71,9 +75,7 @@ def show_quiz_screen(df, logger=None):
 
     show_navigation_buttons(current_question)
 
-def handle_answer(select_button, question, options, current_question):
-    logger = setup_logger()
-    
+def handle_answer(select_button, question, options, current_question, logger):
     with st.spinner('GPT-4が回答を評価しています...'):
         gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
     
@@ -122,8 +124,7 @@ def show_answer_animation(is_correct):
         </div>
         """, unsafe_allow_html=True)
 
-def show_navigation_buttons(current_question):
-    logger = setup_logger()
+def show_navigation_buttons(current_question, logger):
     remaining_questions = MAX_QUESTIONS - st.session_state.total_attempted
     
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -140,8 +141,7 @@ def show_navigation_buttons(current_question):
                 st.session_state.question_index += 1
                 st.rerun()
 
-def process_answer(is_correct, current_question, select_button, gpt_response):
-    logger = setup_logger()
+def process_answer(is_correct, current_question, select_button, gpt_response, logger):
     
     if is_correct and current_question not in st.session_state.answered_questions:
         st.session_state.correct_count += 1
