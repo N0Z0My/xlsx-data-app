@@ -22,28 +22,25 @@ def init_session_state():
 def init_logger():
     """ロガーの初期化と設定"""
     try:
-        # デバッグ情報の出力
-        st.write("利用可能なsecrets:", list(st.secrets.keys()))
-        
         if st.session_state.logger is None:
             try:
-                # gsheet接続情報から spreadsheet_id を取得
-                SPREADSHEET_ID = st.secrets.gsheet.spreadsheet.id
-                st.write("取得したspreadsheet_id:", SPREADSHEET_ID)
+                # gsheetセクションからspreadsheet.idを取得
+                SPREADSHEET_ID = st.secrets.gsheet["spreadsheet.id"]
+                user_id = st.session_state.nickname or "anonymous"
+                st.session_state.logger = setup_logger(
+                    spreadsheet_id=SPREADSHEET_ID,
+                    user_id=user_id
+                )
             except Exception as e:
-                st.write("spreadsheet_idの取得に失敗:", str(e))
-                raise
-                
-            user_id = st.session_state.nickname or "anonymous"
-            st.session_state.logger = setup_logger(
-                spreadsheet_id=SPREADSHEET_ID,
-                user_id=user_id
-            )
+                st.write("デバッグ - 利用可能なsecrets:", list(st.secrets.keys()))
+                st.write("デバッグ - gsheetの内容:", dict(st.secrets.gsheet))
+                st.error(f"spreadsheet IDの取得に失敗: {str(e)}")
+                return False
         return True
     except Exception as e:
         st.error(f"ロガーの初期化に失敗しました: {str(e)}")
         return False
-
+    
 def log_action(message, level="info"):
     """安全なロギング関数"""
     if hasattr(st.session_state, 'logger') and st.session_state.logger is not None:
