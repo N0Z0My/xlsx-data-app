@@ -115,9 +115,6 @@ def main():
         # データの読み込み
         df = load_data()
         if df is not None:
-            show_quiz_screen(df)
+            show_quiz_screen(df, st.session_state.logger)  # ロガーを渡す
         else:
             st.error("問題データを読み込めませんでした。")
-
-if __name__ == "__main__":
-    main()
