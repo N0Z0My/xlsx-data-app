@@ -138,7 +138,7 @@ def show_answer_animation(is_correct):
                     position: absolute;
                     top: 10px;
                     right: 10px;
-                    font-size: 18px;
+                    font-size: 30px;
                 '>
                     +1 point
                 </div>
@@ -153,7 +153,7 @@ def show_answer_animation(is_correct):
                           padding: 30px; 
                           border-radius: 15px; 
                           text-align: center;
-                          font-size: 24px;
+                          font-size: 30px;
                           margin: 20px 0;'>
                     💫 惜しい！
                 </div>
@@ -164,7 +164,7 @@ def show_navigation_buttons(current_question, logger):
     
     with col2:
         if st.session_state.total_attempted >= MAX_QUESTIONS:
-            if st.button('結果を見る 🎉', use_container_width=True):
+            if st.button('結果を見る📚', use_container_width=True):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了 - 結果画面へ遷移")
                 st.session_state.screen = 'result'
                 st.rerun()
