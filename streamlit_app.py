@@ -19,6 +19,8 @@ def init_session_state():
         st.session_state.nickname = None
     if 'logger' not in st.session_state:
         st.session_state.logger = None
+    if 'quiz_df' not in st.session_state:  # DataFrameをセッション状態に追加
+        st.session_state.quiz_df = None
 
 def init_logger():
     """ロガーの初期化と設定"""
@@ -63,6 +65,7 @@ def show_sidebar():
                 st.session_state.nickname = None
                 st.session_state.logger = None
                 st.session_state.screen = 'login'
+                st.session_state.quiz_df = None  # ログアウト時にDataFrameもクリア
                 st.rerun()
 
 def show_login_screen():
@@ -96,8 +99,16 @@ def main():
     # 画面の表示を切り替え
     if st.session_state.screen == 'admin':
         show_admin_screen()
-    elif st.session_state.screen == 'result':  # 結果画面の条件を追加
-        show_result_screen()
+    elif st.session_state.screen == 'result':
+        if st.session_state.quiz_df is not None:
+            show_result_screen(st.session_state.quiz_df)
+        else:
+            df = load_data()  # データがない場合は再読み込み
+            if df is not None:
+                st.session_state.quiz_df = df
+                show_result_screen(df)
+            else:
+                st.error("問題データを読み込めませんでした。")
     elif st.session_state.nickname is None:
         show_login_screen()
     else:
@@ -109,6 +120,7 @@ def main():
         # データの読み込み
         df = load_data()
         if df is not None:
+            st.session_state.quiz_df = df  # DataFrameをセッション状態に保存
             show_quiz_screen(
                 df=df,
                 logger=st.session_state.logger
