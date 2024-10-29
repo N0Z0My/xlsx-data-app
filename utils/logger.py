@@ -150,5 +150,34 @@ def setup_logger(
         print(f"ログ設定中にエラーが発生しました: {str(e)}")
         raise
 
+def get_logs(
+    spreadsheet_id,
+    user_id=None,
+    level=None,
+    limit=100
+):
+    """Google Sheetsからログを取得"""
+    try:
+        handler = GoogleSheetsHandler(spreadsheet_id)
+        result = handler.gsheet_connector.values().get(
+            spreadsheetId=spreadsheet_id,
+            range=f'logs!A:F'
+        ).execute()
+        
+        values = result.get('values', [])[1:]  # ヘッダーを除外
+        
+        # フィルタリング
+        filtered_values = values
+        if user_id:
+            filtered_values = [row for row in filtered_values if row[1] == user_id]
+        if level:
+            filtered_values = [row for row in filtered_values if row[2] == level]
+        
+        return filtered_values[-limit:]
+        
+    except HttpError as e:
+        print(f"ログの取得エラー: {e}")
+        return []
+
 # 初期設定でロガーを作成
 logger = setup_logger()
