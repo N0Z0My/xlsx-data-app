@@ -21,9 +21,22 @@ JP_TZ = pytz.timezone('Asia/Tokyo')
 # グローバル変数としてloggerを定義
 logger = None
 
+class JSTFormatter(logging.Formatter):
+    """JSTタイムゾーンに対応したフォーマッタ"""
+    def converter(self, timestamp):
+        dt = datetime.fromtimestamp(timestamp)
+        return JP_TZ.localize(dt)
+
+    def formatTime(self, record, datefmt=None):
+        dt = self.converter(record.created)
+        if datefmt:
+            return dt.strftime(datefmt)
+        return dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+    
+
 class GoogleSheetsHandler(logging.Handler):
     """Google Sheetsにログを保存するハンドラ"""
-    
+
     def __init__(self, spreadsheet_id, sheet_name='logs'):
         super().__init__()
         self.spreadsheet_id = spreadsheet_id
@@ -148,9 +161,10 @@ def setup_logger(
         console_handler = logging.StreamHandler()
         console_handler.setLevel(log_level)
         
-        formatter = logging.Formatter(
-            '%(asctime)s JST - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+        # JSTFormatterを使用
+        formatter = JSTFormatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S %Z'
         )
         
         sheets_handler.setFormatter(formatter)
