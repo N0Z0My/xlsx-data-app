@@ -90,8 +90,8 @@ def main():
     init_session_state()
     
     # デバッグ出力
-    st.write("Current screen:", st.session_state.screen)
-    st.write("Current nickname:", st.session_state.nickname)
+    #st.write("Current screen:", st.session_state.screen)
+    #st.write("Current nickname:", st.session_state.nickname)
     
     # サイドバーの表示
     show_sidebar()
