@@ -118,102 +118,48 @@ def handle_answer(select_button, question, options, current_question, logger):
     process_answer(is_correct, current_question, select_button, gpt_response, logger)  # loggerを追加
 
 def show_answer_animation(is_correct):
-    """紙吹雪エフェクト付きの改善された回答アニメーション表示"""
+    """洗練された回答アニメーション表示"""
     if is_correct:
         st.markdown("""
             <style>
                 @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-10px); }
+                    from { opacity: 0; transform: translateY(-5px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-                @keyframes confetti {
-                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-                }
                 .result-container {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .bounce-icon {
-                    display: inline-block;
-                    animation: bounce 2s infinite;
-                }
-                .confetti {
-                    position: absolute;
-                    width: 10px;
-                    height: 10px;
-                    opacity: 0;
-                }
-                .confetti-piece {
-                    position: absolute;
-                    width: 8px;
-                    height: 8px;
-                    animation: confetti 3s ease-in-out infinite;
+                    animation: fadeIn 0.4s ease-out;
                 }
             </style>
             <div class='result-container' style='
-                background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-                border: 2px solid #28a745;
+                background-color: #d4edda;
+                border-left: 4px solid #28a745;
                 color: #155724;
-                padding: 30px;
-                border-radius: 15px;
-                text-align: center;
-                font-size: 24px;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: left;
+                font-size: 16px;
                 margin: 20px 0;
                 position: relative;
-                box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
-                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             '>
                 <div style='
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 4px;
-                    background: linear-gradient(90deg, #28a745, #98e9ab);
-                '></div>
-                
-                <!-- 紙吹雪エフェクト -->
-                <script>
-                    function createConfetti() {
-                        const container = document.querySelector('.result-container');
-                        const colors = ['#FFD700', '#FF6B6B', '#4CAF50', '#64B5F6', '#BA68C8'];
-                        
-                        for (let i = 0; i < 50; i++) {
-                            const confetti = document.createElement('div');
-                            confetti.className = 'confetti-piece';
-                            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                            confetti.style.left = Math.random() * 100 + '%';
-                            confetti.style.animationDelay = Math.random() * 2 + 's';
-                            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                            container.appendChild(confetti);
-                        }
-                    }
-                    createConfetti();
-                </script>
-
-                <span class='bounce-icon' style='font-size: 36px;'>🎉</span>
-                <span style='margin-left: 10px; font-weight: bold;'>正解！</span>
-                <div style='
-                    background-color: #28a745;
-                    color: white;
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                     display: flex;
                     align-items: center;
-                    gap: 5px;
+                    gap: 12px;
                 '>
-                    <span style='font-size: 20px;'>⭐</span>
-                    +1 point
+                    <span style='font-size: 24px;'>🎉</span>
+                    <span style='font-weight: 600;'>正解です！</span>
+                    <div style='
+                        margin-left: auto;
+                        background-color: #28a745;
+                        color: white;
+                        padding: 4px 12px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        font-weight: 500;
+                    '>
+                        +1 point
+                    </div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -221,51 +167,32 @@ def show_answer_animation(is_correct):
         st.markdown("""
             <style>
                 @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-10px); }
+                    from { opacity: 0; transform: translateY(-5px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
-                    100% { transform: scale(1); }
-                }
                 .result-container {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .pulse-icon {
-                    display: inline-block;
-                    animation: pulse 2s infinite;
+                    animation: fadeIn 0.4s ease-out;
                 }
             </style>
             <div class='result-container' style='
-                background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-                border: 2px solid #dc3545;
+                background-color: #f8d7da;
+                border-left: 4px solid #dc3545;
                 color: #721c24;
-                padding: 30px;
-                border-radius: 15px;
-                text-align: center;
-                font-size: 30px;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: left;
+                font-size: 16px;
                 margin: 20px 0;
                 position: relative;
-                box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
-                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             '>
                 <div style='
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 4px;
-                    background: linear-gradient(90deg, #dc3545, #ff8d96);
-                '></div>
-                <span class='pulse-icon' style='font-size: 36px;'>💫</span>
-                <span style='margin-left: 10px; font-weight: bold;'>惜しい！</span>
-                <div style='
-                    font-size: 18px;
-                    margin-top: 10px;
-                    opacity: 0.8;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
                 '>
-                    次の問題も頑張りましょう！
+                    <span style='font-size: 24px;'>💡</span>
+                    <span style='font-weight: 600;'>惜しいですね</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
