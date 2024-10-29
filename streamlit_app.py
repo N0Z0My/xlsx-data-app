@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from components.quiz import show_quiz_screen
 from components.result import show_result_screen
-from components.admin import show_admin_screen
 from utils.logger import setup_logger
 
 def init_session_state():
@@ -19,7 +18,7 @@ def init_session_state():
         st.session_state.nickname = None
     if 'logger' not in st.session_state:
         st.session_state.logger = None
-    if 'quiz_df' not in st.session_state:  # DataFrameをセッション状態に追加
+    if 'quiz_df' not in st.session_state:
         st.session_state.quiz_df = None
 
 def init_logger():
@@ -56,16 +55,12 @@ def load_data():
 def show_sidebar():
     """サイドバーの表示"""
     with st.sidebar:
-        if st.button("管理者画面"):
-            st.session_state.screen = 'admin'
-            st.rerun()
-        
         if st.session_state.nickname:
             if st.button("ログアウト"):
                 st.session_state.nickname = None
                 st.session_state.logger = None
                 st.session_state.screen = 'login'
-                st.session_state.quiz_df = None  # ログアウト時にDataFrameもクリア
+                st.session_state.quiz_df = None
                 st.rerun()
 
 def show_login_screen():
@@ -79,7 +74,6 @@ def show_login_screen():
             st.session_state.nickname = nickname
             st.session_state.screen = 'quiz'
             
-            # ロガーの再初期化
             if init_logger():
                 st.rerun()
             else:
@@ -89,21 +83,15 @@ def main():
     # 初期化処理
     init_session_state()
     
-    # デバッグ出力
-    #st.write("Current screen:", st.session_state.screen)
-    #st.write("Current nickname:", st.session_state.nickname)
-    
     # サイドバーの表示
     show_sidebar()
     
     # 画面の表示を切り替え
-    if st.session_state.screen == 'admin':
-        show_admin_screen()
-    elif st.session_state.screen == 'result':
+    if st.session_state.screen == 'result':
         if st.session_state.quiz_df is not None:
             show_result_screen(st.session_state.quiz_df)
         else:
-            df = load_data()  # データがない場合は再読み込み
+            df = load_data()
             if df is not None:
                 st.session_state.quiz_df = df
                 show_result_screen(df)
@@ -112,15 +100,13 @@ def main():
     elif st.session_state.nickname is None:
         show_login_screen()
     else:
-        # ロガーの初期化を確実に行う
         if not init_logger():
             st.error("ロガーの初期化に失敗しました。")
             return
             
-        # データの読み込み
         df = load_data()
         if df is not None:
-            st.session_state.quiz_df = df  # DataFrameをセッション状態に保存
+            st.session_state.quiz_df = df
             show_quiz_screen(
                 df=df,
                 logger=st.session_state.logger
