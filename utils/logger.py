@@ -10,23 +10,12 @@ import json
 from datetime import datetime
 import pytz
 import streamlit as st
+from .streamlit.config import SPREADSHEET_ID, SHEET_NAME
 
 SCOPE = "https://www.googleapis.com/auth/spreadsheets"
-
-# secrets.tomlから設定を読み込む
-try:
-    SHEET_ID = st.secrets["gsheet"]["spreadsheet_id"]
-except KeyError:
-    # 開発環境用のフォールバック値
-    SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
-    print("Warning: Using fallback SHEET_ID. Make sure to set up secrets.toml in production.")
-
-SHEET_NAME = "sheet1"
-
 
 # 日本のタイムゾーンを設定
 JP_TZ = pytz.timezone('Asia/Tokyo')
-SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 
 class GoogleSheetsHandler(logging.Handler):
     """Google Sheetsにログを保存するハンドラ"""

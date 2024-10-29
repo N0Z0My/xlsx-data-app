@@ -1,12 +1,12 @@
-import asyncio
 from openai import OpenAI
-import streamlit as st
-from .logger import setup_logger
+from utils.logger import setup_logger
+import asyncio
+from .streamlit.config import SPREADSHEET_ID, OPENAI_API_KEY
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# OpenAI クライアントの初期化
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # loggerの初期化
-SPREADSHEET_ID = st.secrets["spreadsheet_id"]
 logger = setup_logger(spreadsheet_id=SPREADSHEET_ID, user_id="gpt")
 
 async def evaluate_answer_with_gpt(question, options, user_answer):
