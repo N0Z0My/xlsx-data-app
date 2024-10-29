@@ -4,12 +4,12 @@ from utils.logger import logger
 def show_result_screen(df):
     st.title("🎉 クイズ完了！")
     
-    accuracy = (st.session_state.correct_count / len(df)) * 100
-    logger.info(f"クイズ完了 - 正解数: {st.session_state.correct_count}/{len(df)}, 正答率: {accuracy:.1f}%")
+    accuracy = (st.session_state.correct_count / 20 ) * 100
+    logger.info(f"クイズ完了 - 正解数: {st.session_state.correct_count}/ 20 , 正答率: {accuracy:.1f}%")
     
     # スコア表示
     st.markdown(f"## 最終スコア")
-    st.markdown(f"### {st.session_state.correct_count} / {len(df)} 問正解！")
+    st.markdown(f"### {st.session_state.correct_count} / 20 問 正解！")
     st.markdown(f"### 正答率: {accuracy:.1f}%")
     
     # 成績に応じたメッセージ
