@@ -71,6 +71,39 @@ def show_quiz_screen(df):
 
     show_navigation_buttons(current_question)
 
+def show_answer_animation(is_correct):
+    st.markdown("---")
+    if is_correct:
+        # 正解時の表示
+        st.markdown("""
+        <div style='padding: 20px; background-color: #E7F7E7; border-radius: 10px; border-left: 5px solid #28a745;'>
+            <h2 style='color: #28a745; margin: 0; display: flex; align-items: center; gap: 10px;'>
+                <span>🎉 正解！</span>
+                <span style='font-size: 16px; background-color: #28a745; color: white; padding: 3px 10px; border-radius: 15px;'>
+                    +1 point
+                </span>
+            </h2>
+            <p style='color: #2E7D32; margin-top: 10px;'>
+                素晴らしい判断です！この知識は実際の旅行で役立つはずです。
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # 不正解時の表示
+        st.markdown("""
+        <div style='padding: 20px; background-color: #FEEDED; border-radius: 10px; border-left: 5px solid #dc3545;'>
+            <h2 style='color: #dc3545; margin: 0;'>💫 惜しい！</h2>
+            <p style='color: #712B2B; margin-top: 10px;'>
+                間違いから学ぶことで、より深い知識が身につきます。
+            </p>
+            <div style='background-color: rgba(255,255,255,0.7); padding: 10px; border-radius: 5px; margin-top: 10px;'>
+                <span style='font-weight: bold; color: #dc3545;'>ワンポイント:</span>
+                <br>
+                解説をよく読んで、次の問題に活かしましょう！
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 def handle_answer(select_button, question, options, current_question):
     logger = get_user_logger(st.session_state.nickname)
     
@@ -104,7 +137,6 @@ def show_navigation_buttons(current_question):
                 st.session_state.screen = 'result'
                 st.rerun()
         else:
-            st.write(f"残り {remaining_questions} 問")
             if st.button('次の問題へ ➡️', use_container_width=True):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {current_question + 1}")
                 st.session_state.question_index += 1
