@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 import pytz
 import streamlit as st
-from .utils.config import SPREADSHEET_ID, SHEET_NAME  # この行を削除
+from .config import SPREADSHEET_ID, SHEET_NAME  # この行を削除
 
 SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 
