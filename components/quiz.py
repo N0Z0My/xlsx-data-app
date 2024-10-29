@@ -71,9 +71,9 @@ def show_quiz_screen(df, logger=None):
             st.warning('回答を選択してください。')
             return
         
-        handle_answer(select_button, question, options, current_question)
+        handle_answer(select_button, question, options, current_question, logger)
 
-    show_navigation_buttons(current_question)
+    show_navigation_buttons(current_question,logger)
 
 def handle_answer(select_button, question, options, current_question, logger):
     with st.spinner('GPT-4が回答を評価しています...'):
