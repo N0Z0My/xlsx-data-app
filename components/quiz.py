@@ -145,14 +145,14 @@ def show_answer_animation(is_correct):
             st.error("💫 惜しい！")
             
             # ワンポイントボックス
-            st.markdown("""
-                <div style='background-color: #f8f9fa; 
-                          padding: 10px; 
-                          border-radius: 5px; 
-                          margin-top: 10px;'>
-                    <strong style='color: #dc3545;'>ワンポイント:</strong><br>
-                    解説をよく読んで、次の問題に活かしましょう！
-                </div>
+            #st.markdown("""
+                #<div style='background-color: #f8f9fa; 
+                          #padding: 10px; 
+                          #border-radius: 5px; 
+                          #margin-top: 10px;'>
+                    #<strong style='color: #dc3545;'>ワンポイント:</strong><br>
+                   # 解説をよく読んで、次の問題に活かしましょう！
+               # </div>
             """, unsafe_allow_html=True)
 
 def show_navigation_buttons(current_question, logger):
