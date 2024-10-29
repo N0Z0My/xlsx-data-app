@@ -96,6 +96,8 @@ def main():
     # 画面の表示を切り替え
     if st.session_state.screen == 'admin':
         show_admin_screen()
+    elif st.session_state.screen == 'result':  # 結果画面の条件を追加
+        show_result_screen()
     elif st.session_state.nickname is None:
         show_login_screen()
     else:
@@ -109,7 +111,7 @@ def main():
         if df is not None:
             show_quiz_screen(
                 df=df,
-                logger=st.session_state.logger  # 確実に初期化されたloggerを渡す
+                logger=st.session_state.logger
             )
         else:
             st.error("問題データを読み込めませんでした。")
