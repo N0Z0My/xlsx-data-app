@@ -25,7 +25,7 @@ def init_logger():
         if st.session_state.logger is None:
             try:
                 # gsheetセクションからspreadsheet.idを取得
-                SPREADSHEET_ID = st.secrets.gsheet["spreadsheet.id"]
+                SPREADSHEET_ID = st.secrets.gsheet["spreadsheet_id"]
                 user_id = st.session_state.nickname or "anonymous"
                 st.session_state.logger = setup_logger(
                     spreadsheet_id=SPREADSHEET_ID,
