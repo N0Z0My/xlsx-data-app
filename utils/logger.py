@@ -14,6 +14,7 @@ from .config import SPREADSHEET_ID
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
 ]
 JP_TZ = pytz.timezone('Asia/Tokyo')
 
@@ -85,19 +86,12 @@ class GoogleSheetsHandler(logging.Handler):
                     body={'requests': [request]}
                 ).execute()
             
-            # ヘッダーを設定
-            headers = [
-                'created_at',
-                'user_id',
-                'level',
-                'logger_name',
-                'message',
-                'extra_data'
-            ]
+            # ヘッダーを設定（1列目のみ使用）
+            headers = ['Log Message']
             
             self.gsheet_connector.values().update(
                 spreadsheetId=self.spreadsheet_id,
-                range=f'{self.sheet_name}!A1:F1',
+                range=f'{self.sheet_name}!A1',  # 1列目のみ
                 valueInputOption='RAW',
                 body={'values': [headers]}
             ).execute()
@@ -107,25 +101,13 @@ class GoogleSheetsHandler(logging.Handler):
             raise
 
     def add_row_to_gsheet(self, row_data):
-        """
-        Google Sheetsに1行のデータを追加
-        
-        Parameters:
-        -----------
-        row_data : list
-            追加する行データのリスト
-            
-        Returns:
-        --------
-        bool
-            追加が成功した場合はTrue、失敗した場合はFalse
-        """
+        """Google Sheetsに1行のデータを追加"""
         try:
             self.gsheet_connector.values().append(
                 spreadsheetId=self.spreadsheet_id,
-                range=f'{self.sheet_name}!A:F',
+                range=f'{self.sheet_name}!A:A',  # 1列目のみ使用
                 valueInputOption='USER_ENTERED',
-                body={'values': [row_data]}
+                body={'values': [[row_data]]}  # リストの中にリストとして渡す
             ).execute()
             return True
         except Exception as e:
@@ -135,26 +117,12 @@ class GoogleSheetsHandler(logging.Handler):
     def emit(self, record):
         """ログレコードをGoogle Sheetsに書き込む"""
         try:
-            extra_data = {
-                key: value
-                for key, value in record.__dict__.items()
-                if key not in ['msg', 'args', 'exc_info', 'exc_text']
-            }
-            
-            log_data = [
-                datetime.now(JP_TZ).isoformat(),
-                getattr(record, 'user_id', ''),
-                record.levelname,
-                record.name,
-                self.format(record),
-                json.dumps(extra_data, ensure_ascii=False)
-            ]
-            
-            self.add_row_to_gsheet(log_data)
+            # コンソールと同じフォーマットでログメッセージを生成
+            formatted_message = self.format(record)
+            self.add_row_to_gsheet(formatted_message)
             
         except Exception as e:
             print(f"Google Sheetsへのログ書き込み中にエラーが発生: {str(e)}")
-
 
 def setup_logger(
     spreadsheet_id=SPREADSHEET_ID,
@@ -181,8 +149,8 @@ def setup_logger(
         console_handler.setLevel(log_level)
         
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S JST'
+            '%(asctime)s JST - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
         )
         
         sheets_handler.setFormatter(formatter)
@@ -211,17 +179,21 @@ def get_logs(
         handler = GoogleSheetsHandler(spreadsheet_id)
         result = handler.gsheet_connector.values().get(
             spreadsheetId=spreadsheet_id,
-            range=f'logs!A:F'
+            range=f'{handler.sheet_name}!A:A'  # 1列目のみ取得
         ).execute()
         
         values = result.get('values', [])[1:]  # ヘッダーを除外
         
-        # フィルタリング
-        filtered_values = values
-        if user_id:
-            filtered_values = [row for row in filtered_values if row[1] == user_id]
-        if level:
-            filtered_values = [row for row in filtered_values if row[2] == level]
+        # フィルタリング（ユーザーIDまたはレベルでフィルタリングする場合）
+        filtered_values = []
+        for row in values:
+            if len(row) > 0:  # 空行をスキップ
+                log_message = row[0]
+                if user_id and f"ユーザー[{user_id}]" not in log_message:
+                    continue
+                if level and f" - {level} - " not in log_message:
+                    continue
+                filtered_values.append(row)
         
         return filtered_values[-limit:]
         
