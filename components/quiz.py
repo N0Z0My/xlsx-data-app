@@ -125,35 +125,47 @@ def show_answer_animation(is_correct):
             col1, col2 = st.columns([6, 4])
             
             with col1:
-                st.success("🎉 正解！")
+                st.markdown("""
+                    <div style='background-color: #d4edda; 
+                              border: 2px solid #28a745;
+                              color: #155724; 
+                              padding: 30px; 
+                              border-radius: 15px; 
+                              text-align: center;
+                              font-size: 24px;
+                              margin: 20px 0;'>
+                        🎉 正解！
+                    </div>
+                """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown("""
                     <div style='background-color: #28a745; 
                               color: white; 
-                              padding: 10px 20px; 
+                              padding: 25px; 
                               border-radius: 15px; 
-                              text-align: center;'>
+                              text-align: center;
+                              font-size: 20px;
+                              margin: 20px 0;
+                              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
                         +1 point
                     </div>
                 """, unsafe_allow_html=True)
     else:
         # 不正解の場合のコンテナ
-        error_container = st.container()
-        
-        with error_container:
-            st.error("💫 惜しい！")
-            
-            # ワンポイントボックス
-            #st.markdown("""
-                #<div style='background-color: #f8f9fa; 
-                          #padding: 10px; 
-                          #border-radius: 5px; 
-                          #margin-top: 10px;'>
-                    #<strong style='color: #dc3545;'>ワンポイント:</strong><br>
-                   # 解説をよく読んで、次の問題に活かしましょう！
-               # </div>
-            #""", unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+                <div style='background-color: #f8d7da; 
+                          border: 2px solid #dc3545;
+                          color: #721c24; 
+                          padding: 30px; 
+                          border-radius: 15px; 
+                          text-align: center;
+                          font-size: 24px;
+                          margin: 20px 0;'>
+                    💫 惜しい！
+                </div>
+            """, unsafe_allow_html=True)
 
 def show_navigation_buttons(current_question, logger):
     col1, col2, col3 = st.columns([1, 2, 1])
