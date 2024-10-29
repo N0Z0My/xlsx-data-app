@@ -12,7 +12,9 @@ import pytz
 import streamlit as st
 from .config import SPREADSHEET_ID
 
-SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+SCOPE = [
+    "https://www.googleapis.com/auth/spreadsheets",
+]
 JP_TZ = pytz.timezone('Asia/Tokyo')
 
 # グローバル変数としてloggerを定義
@@ -33,7 +35,7 @@ class GoogleSheetsHandler(logging.Handler):
         try:
             credentials = service_account.Credentials.from_service_account_info(
                 st.secrets["connections"]["gcs"],
-                scopes=[SCOPE]
+                scopes=SCOPE
             )
             
             def build_request(http, *args, **kwargs):
@@ -58,25 +60,51 @@ class GoogleSheetsHandler(logging.Handler):
             raise
 
     def _setup_sheet(self):
-        """シートのヘッダーを設定"""
-        headers = [
-            'created_at',
-            'user_id',
-            'level',
-            'logger_name',
-            'message',
-            'extra_data'
-        ]
-        
+        """シートの存在確認と初期設定"""
         try:
+            # まずスプレッドシートの情報を取得
+            spreadsheet = self.gsheet_connector.get(
+                spreadsheetId=self.spreadsheet_id
+            ).execute()
+            
+            # 既存のシート一覧を取得
+            sheets = spreadsheet.get('sheets', [])
+            sheet_names = [sheet['properties']['title'] for sheet in sheets]
+            
+            # 指定したシートが存在しない場合は新規作成
+            if self.sheet_name not in sheet_names:
+                request = {
+                    'addSheet': {
+                        'properties': {
+                            'title': self.sheet_name
+                        }
+                    }
+                }
+                self.gsheet_connector.batchUpdate(
+                    spreadsheetId=self.spreadsheet_id,
+                    body={'requests': [request]}
+                ).execute()
+            
+            # ヘッダーを設定
+            headers = [
+                'created_at',
+                'user_id',
+                'level',
+                'logger_name',
+                'message',
+                'extra_data'
+            ]
+            
             self.gsheet_connector.values().update(
                 spreadsheetId=self.spreadsheet_id,
                 range=f'{self.sheet_name}!A1:F1',
                 valueInputOption='RAW',
                 body={'values': [headers]}
             ).execute()
+            
         except HttpError as e:
             print(f"シートの初期化中にエラーが発生: {e}")
+            raise
 
     def add_row_to_gsheet(self, row_data):
         """
