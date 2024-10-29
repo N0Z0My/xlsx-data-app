@@ -123,7 +123,7 @@ def show_answer_animation(is_correct):
         """, unsafe_allow_html=True)
 
 def show_navigation_buttons(current_question):
-    logger = get_user_logger()
+    logger = setup_logger()
     remaining_questions = MAX_QUESTIONS - st.session_state.total_attempted
     
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -141,7 +141,7 @@ def show_navigation_buttons(current_question):
                 st.rerun()
 
 def process_answer(is_correct, current_question, select_button, gpt_response):
-    logger = get_user_logger()
+    logger = setup_logger()
     
     if is_correct and current_question not in st.session_state.answered_questions:
         st.session_state.correct_count += 1
