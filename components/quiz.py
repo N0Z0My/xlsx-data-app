@@ -153,10 +153,9 @@ def show_answer_animation(is_correct):
                     #<strong style='color: #dc3545;'>ワンポイント:</strong><br>
                    # 解説をよく読んで、次の問題に活かしましょう！
                # </div>
-            """, unsafe_allow_html=True)
+            #""", unsafe_allow_html=True)
 
 def show_navigation_buttons(current_question, logger):
-    """ナビゲーションボタンを表示する関数"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
