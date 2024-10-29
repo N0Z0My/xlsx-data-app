@@ -78,6 +78,32 @@ class GoogleSheetsHandler(logging.Handler):
         except HttpError as e:
             print(f"シートの初期化中にエラーが発生: {e}")
 
+    def add_row_to_gsheet(self, row_data):
+        """
+        Google Sheetsに1行のデータを追加
+        
+        Parameters:
+        -----------
+        row_data : list
+            追加する行データのリスト
+            
+        Returns:
+        --------
+        bool
+            追加が成功した場合はTrue、失敗した場合はFalse
+        """
+        try:
+            self.gsheet_connector.values().append(
+                spreadsheetId=self.spreadsheet_id,
+                range=f'{self.sheet_name}!A:F',
+                valueInputOption='USER_ENTERED',
+                body={'values': [row_data]}
+            ).execute()
+            return True
+        except Exception as e:
+            print(f"行の追加中にエラーが発生: {str(e)}")
+            return False
+
     def emit(self, record):
         """ログレコードをGoogle Sheetsに書き込む"""
         try:
@@ -96,15 +122,11 @@ class GoogleSheetsHandler(logging.Handler):
                 json.dumps(extra_data, ensure_ascii=False)
             ]
             
-            self.gsheet_connector.values().append(
-                spreadsheetId=self.spreadsheet_id,
-                range=f'{self.sheet_name}!A:F',
-                valueInputOption='USER_ENTERED',
-                body={'values': [log_data]}
-            ).execute()
+            self.add_row_to_gsheet(log_data)
             
         except Exception as e:
             print(f"Google Sheetsへのログ書き込み中にエラーが発生: {str(e)}")
+
 
 def setup_logger(
     spreadsheet_id=SPREADSHEET_ID,
