@@ -1,7 +1,7 @@
 from openai import OpenAI
 from utils.logger import setup_logger
 import asyncio
-from .streamlit.config import SPREADSHEET_ID, OPENAI_API_KEY
+from .utils.config import SPREADSHEET_ID, OPENAI_API_KEY
 
 # OpenAI クライアントの初期化
 client = OpenAI(api_key=OPENAI_API_KEY)
