@@ -22,9 +22,13 @@ def init_session_state():
 
 # ユーザーごとのロガーを取得
 def get_user_logger():
+    SPREADSHEET_ID = st.secrets["spreadsheet_id"]
     if st.session_state.logger is None and st.session_state.nickname:
-        st.session_state.logger = setup_logger(user_id=st.session_state.nickname)
-    return st.session_state.logger or setup_logger()
+        st.session_state.logger = setup_logger(
+            spreadsheet_id=SPREADSHEET_ID,
+            user_id=st.session_state.nickname
+        )
+    return st.session_state.logger or setup_logger(spreadsheet_id=SPREADSHEET_ID)
 
 @st.cache_data
 def load_data():
@@ -61,7 +65,11 @@ def show_login_screen():
         if submitted and nickname:
             st.session_state.nickname = nickname
             st.session_state.screen = 'quiz'
-            st.session_state.logger = setup_logger(user_id=nickname)
+            SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+            st.session_state.logger = setup_logger(
+                spreadsheet_id=SPREADSHEET_ID,
+                user_id=nickname
+            )
             get_user_logger().info(f"ユーザー[{nickname}]がログインしました")
             st.rerun()
 

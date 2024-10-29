@@ -1,11 +1,17 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from utils.logger import get_user_logger
+from utils.logger import setup_logger  # get_user_loggerの代わりにsetup_loggerを直接使用
 from utils.gpt import evaluate_answer_with_gpt
 import asyncio
 
 # 問題数の制限を定数として定義
 MAX_QUESTIONS = 20
+
+def get_user_logger(user_id):
+    """ユーザー固有のロガーを取得"""
+    SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+    return setup_logger(spreadsheet_id=SPREADSHEET_ID, user_id=user_id)
+
 
 def show_quiz_screen(df):
     # ユーザーIDとしてニックネームを使用

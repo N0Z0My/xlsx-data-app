@@ -1,12 +1,8 @@
 import streamlit as st
 import pandas as pd
-import os
-import re
 from pathlib import Path
-from utils.logger import logger, get_log_files
-
-# プロジェクトのルートディレクトリを取得
-ROOT_DIR = Path(__file__).parent.parent.absolute()
+from utils.logger import get_logs
+from datetime import datetime, timedelta
 
 def show_admin_screen():
     """管理者画面のメイン表示"""
@@ -28,140 +24,119 @@ def show_log_viewer():
     """ログ閲覧画面の表示"""
     st.header("ログ閲覧")
     
-    log_files = get_log_files()
-    if not log_files:
-        st.info("ログファイルが見つかりません")
-        return
-        
-    selected_log = st.selectbox(
-        "ログファイルを選択", 
-        log_files,
-        format_func=lambda x: x.replace('quiz_app_', '').replace('.log', '')
-    )
-    
+    # フィルター設定
     col1, col2 = st.columns(2)
-    
     with col1:
-        show_log_content(selected_log)
-    
+        user_filter = st.text_input("ユーザーIDでフィルター")
     with col2:
-        provide_log_download(selected_log)
-
-def show_log_content(log_file):
-    """ログファイルの内容を表示"""
-    if st.button("ログを表示"):
-        try:
-            log_path = os.path.join(ROOT_DIR, 'logs', log_file)
-            with open(log_path, 'r', encoding='utf-8') as f:
-                log_contents = f.read().strip()
-            st.text_area("ログ内容", log_contents, height=500)
-        except Exception as e:
-            logger.error(f"ログの読み込みに失敗: {str(e)}")
-            st.error(f"ログの読み込みに失敗しました: {str(e)}")
-
-def provide_log_download(log_file):
-    """ログファイルのダウンロード機能"""
-    if st.button("ログをダウンロード"):
-        try:
-            log_path = os.path.join(ROOT_DIR, 'logs', log_file)
-            with open(log_path, 'r', encoding='utf-8') as f:
-                log_contents = f.read()
-            st.download_button(
-                label="📥 ログファイルをダウンロード",
-                data=log_contents,
-                file_name=log_file,
-                mime="text/plain"
+        level_filter = st.selectbox(
+            "ログレベルでフィルター",
+            ["すべて", "INFO", "ERROR", "WARNING"]
+        )
+    
+    level = None if level_filter == "すべて" else level_filter
+    try:
+        SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+        logs = get_logs(
+            spreadsheet_id=SPREADSHEET_ID,
+            user_id=user_filter if user_filter else None,
+            level=level,
+            limit=1000  # 表示件数制限
+        )
+        
+        if logs:
+            # ログデータをDataFrameに変換
+            df_logs = pd.DataFrame(logs, columns=[
+                'created_at', 'user_id', 'level', 'logger_name', 'message', 'extra_data'
+            ])
+            
+            # タイムスタンプを日本時間に変換
+            df_logs['created_at'] = pd.to_datetime(df_logs['created_at'])
+            
+            # ログ表示
+            st.dataframe(
+                df_logs.style.highlight_cells(
+                    subset=['level'],
+                    value=['ERROR'],
+                    color='red'
+                ),
+                height=400
             )
-        except Exception as e:
-            logger.error(f"ログファイルの準備に失敗: {str(e)}")
-            st.error(f"ログファイルの準備に失敗しました: {str(e)}")
+            
+            # CSVダウンロード
+            csv = df_logs.to_csv(index=False)
+            st.download_button(
+                label="📥 ログをCSVでダウンロード",
+                data=csv,
+                file_name=f"quiz_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("表示するログがありません")
+            
+    except Exception as e:
+        st.error(f"ログの読み込みに失敗しました: {str(e)}")
 
 def show_statistics():
     """統計情報画面の表示"""
     st.header("統計情報")
     
-    log_files = get_log_files()
-    if not log_files:
-        st.info("ログファイルが見つかりません")
-        return
-        
-    selected_log = st.selectbox(
-        "統計を表示するログファイルを選択", 
-        log_files,
-        format_func=lambda x: x.replace('quiz_app_', '').replace('.log', '')
-    )
+    # 期間指定
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "開始日",
+            datetime.now().date() - timedelta(days=7)
+        )
+    with col2:
+        end_date = st.date_input("終了日", datetime.now().date())
     
     try:
-        log_data = parse_log_file(selected_log)
-        if log_data:
-            display_statistics(log_data)
+        SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+        logs = get_logs(
+            spreadsheet_id=SPREADSHEET_ID,
+            limit=1000
+        )
+        
+        if logs:
+            # ログデータをDataFrameに変換
+            df_logs = pd.DataFrame(logs, columns=[
+                'created_at', 'user_id', 'level', 'logger_name', 'message', 'extra_data'
+            ])
+            
+            # タイムスタンプを変換
+            df_logs['created_at'] = pd.to_datetime(df_logs['created_at'])
+            
+            # 期間でフィルタリング
+            mask = (df_logs['created_at'].dt.date >= start_date) & (df_logs['created_at'].dt.date <= end_date)
+            df_filtered = df_logs[mask]
+            
+            # クイズ関連のログのみを抽出
+            df_quiz = df_filtered[df_filtered['message'].str.contains('正解|不正解', na=False)]
+            
+            # 基本統計の計算
+            total_answers = len(df_quiz)
+            correct_answers = len(df_quiz[df_quiz['message'].str.contains('正解', na=False)])
+            accuracy = (correct_answers / total_answers * 100) if total_answers > 0 else 0
+            
+            # 統計情報の表示
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(label="総回答数", value=total_answers)
+            with col2:
+                st.metric(label="正解数", value=correct_answers)
+            with col3:
+                st.metric(label="正答率", value=f"{accuracy:.1f}%")
+            
+            # ユーザー別の統計
+            st.subheader("ユーザー別統計")
+            user_stats = df_quiz.groupby('user_id').agg({
+                'message': 'count'
+            }).rename(columns={'message': '回答数'})
+            st.dataframe(user_stats)
+            
         else:
-            st.info("まだ回答データがありません")
+            st.info("表示するデータがありません")
+            
     except Exception as e:
-        logger.error(f"統計情報の集計に失敗: {str(e)}")
         st.error(f"統計情報の集計に失敗しました: {str(e)}")
-
-def parse_log_file(log_file):
-    """ログファイルを解析してデータを抽出"""
-    log_path = os.path.join(ROOT_DIR, 'logs', log_file)
-    with open(log_path, 'r', encoding='utf-8') as f:
-        log_contents = f.readlines()
-    
-    log_data = []
-    current_question = None
-    current_timestamp = None
-    
-    for line in log_contents:
-        timestamp_match = re.match(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
-        if timestamp_match:
-            current_timestamp = timestamp_match.group(1)
-        
-        question_match = re.search(r'問題表示 - 問題番号: (\d+), 問題: (.+)$', line)
-        if question_match:
-            current_question = {
-                'timestamp': current_timestamp,
-                'question_number': question_match.group(1),
-                'question': question_match.group(2)
-            }
-        
-        answer_match = re.search(r'(正解|不正解) - 問題番号: (\d+), ユーザー回答: (.+)$', line)
-        if answer_match and current_question:
-            log_data.append({
-                'timestamp': current_timestamp,
-                'question_number': answer_match.group(2),
-                'question': current_question['question'],
-                'user_answer': answer_match.group(3),
-                'result': answer_match.group(1)
-            })
-    
-    return log_data
-
-def display_statistics(log_data):
-    """統計情報の表示"""
-    df_log = pd.DataFrame(log_data)
-    
-    # 基本統計
-    correct_answers = len(df_log[df_log['result'] == '正解'])
-    total_attempts = len(df_log)
-    accuracy = (correct_answers / total_attempts) * 100 if total_attempts > 0 else 0
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric(label="総回答数", value=total_attempts)
-    with col2:
-        st.metric(label="正解数", value=correct_answers)
-    with col3:
-        st.metric(label="正答率", value=f"{accuracy:.1f}%")
-    
-    # データプレビュー
-    st.subheader("データプレビュー")
-    st.dataframe(df_log)
-    
-    # CSVダウンロード
-    csv = df_log.to_csv(index=False)
-    st.download_button(
-        label="📥 CSVファイルをダウンロード",
-        data=csv,
-        file_name="quiz_statistics.csv",
-        mime="text/csv"
-    )

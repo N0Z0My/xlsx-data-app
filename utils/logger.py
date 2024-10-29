@@ -1,142 +1,117 @@
-import logging
 import os
-import sqlite3
-from datetime import datetime
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
-import pytz
+from google.oauth2 import service_account
+import google_auth_httplib2
+import httplib2
+from googleapiclient.discovery import build
+from googleapiclient.http import HttpRequest
+from googleapiclient.errors import HttpError
+import logging
 import json
+from datetime import datetime
+import pytz
+import streamlit as st
 
-# プロジェクトのルートディレクトリを取得
-ROOT_DIR = Path(__file__).parent.parent.absolute()
+SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
+SHEET_NAME = "sheet1"
 
 # 日本のタイムゾーンを設定
 JP_TZ = pytz.timezone('Asia/Tokyo')
+SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 
-class SQLiteHandler(logging.Handler):
-    """SQLiteにログを保存するハンドラ"""
-    def __init__(self, db_path):
+class GoogleSheetsHandler(logging.Handler):
+    """Google Sheetsにログを保存するハンドラ"""
+    
+    def __init__(self, spreadsheet_id, sheet_name='logs'):
         super().__init__()
-        self.db_path = db_path
-        self._create_table()
-
-    def _create_table(self):
-        """ログテーブルの作成"""
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    created_at TIMESTAMP NOT NULL,
-                    user_id TEXT,
-                    level TEXT NOT NULL,
-                    logger_name TEXT,
-                    message TEXT NOT NULL,
-                    extra_data TEXT
+        self.spreadsheet_id = spreadsheet_id
+        self.sheet_name = sheet_name
+        self.gsheet_connector = self._connect_to_gsheet()
+        self._setup_sheet()
+    
+    def _connect_to_gsheet(self):
+        """Streamlitのシークレットを使用してGoogle Sheetsに接続"""
+        try:
+            credentials = service_account.Credentials.from_service_account_info(
+                st.secrets["connections"]["gcs"],
+                scopes=[SCOPE]
+            )
+            
+            def build_request(http, *args, **kwargs):
+                new_http = google_auth_httplib2.AuthorizedHttp(
+                    credentials, http=httplib2.Http()
                 )
-            ''')
-            # インデックスの作成
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_created_at ON logs(created_at)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_user_id ON logs(user_id)')
+                return HttpRequest(new_http, *args, **kwargs)
+                
+            authorized_http = google_auth_httplib2.AuthorizedHttp(
+                credentials, http=httplib2.Http()
+            )
+            
+            service = build(
+                "sheets",
+                "v4",
+                requestBuilder=build_request,
+                http=authorized_http
+            )
+            return service.spreadsheets()
+        except Exception as e:
+            print(f"Google Sheets接続エラー: {str(e)}")
+            raise
+
+    def _setup_sheet(self):
+        """シートのヘッダーを設定"""
+        headers = [
+            'created_at',
+            'user_id',
+            'level',
+            'logger_name',
+            'message',
+            'extra_data'
+        ]
+        
+        try:
+            self.gsheet_connector.values().update(
+                spreadsheetId=self.spreadsheet_id,
+                range=f'{self.sheet_name}!A1:F1',
+                valueInputOption='RAW',
+                body={'values': [headers]}
+            ).execute()
+        except HttpError as e:
+            print(f"シートの初期化中にエラーが発生: {e}")
 
     def emit(self, record):
-        """ログレコードをDBに書き込む"""
+        """ログレコードをGoogle Sheetsに書き込む"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                
-                # 追加情報の抽出
-                extra_data = {
-                    key: value
-                    for key, value in record.__dict__.items()
-                    if key not in ['msg', 'args', 'exc_info', 'exc_text']
-                }
-                
-                cursor.execute('''
-                    INSERT INTO logs 
-                    (created_at, user_id, level, logger_name, message, extra_data)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (
-                    datetime.now(JP_TZ).isoformat(),
-                    getattr(record, 'user_id', None),
-                    record.levelname,
-                    record.name,
-                    self.format(record),
-                    json.dumps(extra_data)
-                ))
+            # 追加情報の抽出
+            extra_data = {
+                key: value
+                for key, value in record.__dict__.items()
+                if key not in ['msg', 'args', 'exc_info', 'exc_text']
+            }
+            
+            # ログデータの準備
+            log_data = [
+                datetime.now(JP_TZ).isoformat(),
+                getattr(record, 'user_id', ''),
+                record.levelname,
+                record.name,
+                self.format(record),
+                json.dumps(extra_data, ensure_ascii=False)
+            ]
+            
+            # スプレッドシートに追加
+            self.gsheet_connector.values().append(
+                spreadsheetId=self.spreadsheet_id,
+                range=f'{self.sheet_name}!A:F',
+                valueInputOption='USER_ENTERED',
+                body={'values': [log_data]}
+            ).execute()
+            
         except Exception as e:
-            print(f"SQLiteへのログ書き込み中にエラーが発生: {str(e)}")
-
-def get_jst_time():
-    """現在の日本時間を取得"""
-    return datetime.now(JP_TZ)
-
-def get_log_files():
-    """ログファイル一覧を取得"""
-    log_dir = os.path.join(ROOT_DIR, 'logs')
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-        return []
-    
-    return sorted(
-        [f for f in os.listdir(log_dir) if f.endswith('.log')],
-        reverse=True
-    )
-
-# SQLiteからログを取得するユーティリティ関数
-def get_logs_from_db(
-    db_path=None,
-    user_id=None,
-    level=None,
-    start_date=None,
-    end_date=None,
-    limit=100
-):
-    """データベースからログを取得"""
-    if db_path is None:
-        db_path = os.path.join(ROOT_DIR, 'logs', 'app_logs.db')
-
-    query = 'SELECT * FROM logs WHERE 1=1'
-    params = []
-    
-    if user_id:
-        query += ' AND user_id = ?'
-        params.append(user_id)
-    
-    if level:
-        query += ' AND level = ?'
-        params.append(level)
-    
-    if start_date:
-        query += ' AND created_at >= ?'
-        params.append(start_date.isoformat())
-    
-    if end_date:
-        query += ' AND created_at <= ?'
-        params.append(end_date.isoformat())
-    
-    query += ' ORDER BY created_at DESC LIMIT ?'
-    params.append(limit)
-    
-    with sqlite3.connect(db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        return cursor.execute(query, params).fetchall()
-
-class JSTFormatter(logging.Formatter):
-    """日本時間でログを記録するフォーマッタ"""
-    def converter(self, timestamp):
-        dt = datetime.fromtimestamp(timestamp)
-        return JP_TZ.localize(dt)
-
-    def formatTime(self, record, datefmt=None):
-        dt = self.converter(record.created)
-        if datefmt:
-            return dt.strftime(datefmt)
-        return dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+            print(f"Google Sheetsへのログ書き込み中にエラーが発生: {str(e)}")
 
 def setup_logger(
-    log_dir='logs',
-    app_name='quiz_app',
+    spreadsheet_id,
     log_level=logging.INFO,
     user_id=None
 ):
@@ -146,58 +121,31 @@ def setup_logger(
     logger = logging.getLogger(logger_name)
     if logger.handlers:
         return logger
-        
+    
     try:
-        # ログディレクトリの設定
-        log_dir = os.path.join(ROOT_DIR, log_dir)
-        os.makedirs(log_dir, exist_ok=True)
-        
-        # SQLiteのデータベースパス
-        db_path = os.path.join(log_dir, 'app_logs.db')
-        
-        # タイムスタンプの生成
-        timestamp = get_jst_time().strftime('%Y%m%d_%H%M%S')
-        filename_prefix = f"{app_name}_{user_id}" if user_id else app_name
-        log_filename = os.path.join(
-            log_dir, 
-            f"{filename_prefix}_{timestamp}.log"
-        )
-        
-        logger.setLevel(log_level)
-        
-        # 通常のファイルハンドラ
-        file_handler = RotatingFileHandler(
-            log_filename,
-            maxBytes=5*1024*1024,
-            backupCount=15,
-            encoding='utf-8'
-        )
-        file_handler.setLevel(log_level)
-        
-        # SQLiteハンドラ
-        sqlite_handler = SQLiteHandler(db_path)
-        sqlite_handler.setLevel(log_level)
+        # Google Sheetsハンドラ
+        sheets_handler = GoogleSheetsHandler(spreadsheet_id)
+        sheets_handler.setLevel(log_level)
         
         # コンソールハンドラ
         console_handler = logging.StreamHandler()
         console_handler.setLevel(log_level)
         
         # フォーマッタの設定
-        formatter = JSTFormatter(
+        formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S JST'
         )
         
-        file_handler.setFormatter(formatter)
-        sqlite_handler.setFormatter(formatter)
+        sheets_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
         
-        # すべてのハンドラを追加
-        logger.addHandler(file_handler)
-        logger.addHandler(sqlite_handler)
+        # ハンドラを追加
+        logger.addHandler(sheets_handler)
         logger.addHandler(console_handler)
         
-        logger.info(f"新しいログセッションを開始しました: {log_filename}")
+        logger.setLevel(log_level)
+        logger.info("新しいログセッションを開始しました")
         
         return logger
         
@@ -205,42 +153,31 @@ def setup_logger(
         print(f"ログ設定中にエラーが発生しました: {str(e)}")
         raise
 
-# デフォルトのグローバルロガーインスタンス
-logger = setup_logger()
-
-def get_user_logger(user_id):
-    """ユーザー固有のロガーを取得"""
-    return setup_logger(user_id=user_id)
-
-# SQLiteからログを検索する便利な関数
-def search_logs(keyword, user_id=None, limit=100):
-    """ログの検索"""
-    db_path = os.path.join(ROOT_DIR, 'logs', 'app_logs.db')
-    with sqlite3.connect(db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+def get_logs(
+    spreadsheet_id,
+    user_id=None,
+    level=None,
+    limit=100
+):
+    """Google Sheetsからログを取得"""
+    try:
+        handler = GoogleSheetsHandler(spreadsheet_id)
+        result = handler.gsheet_connector.values().get(
+            spreadsheetId=spreadsheet_id,
+            range=f'logs!A:F'
+        ).execute()
         
-        query = '''
-            SELECT * FROM logs 
-            WHERE message LIKE ? 
-        '''
-        params = [f'%{keyword}%']
+        values = result.get('values', [])[1:]  # ヘッダーを除外
         
+        # フィルタリング
+        filtered_values = values
         if user_id:
-            query += ' AND user_id = ?'
-            params.append(user_id)
-            
-        query += ' ORDER BY created_at DESC LIMIT ?'
-        params.append(limit)
+            filtered_values = [row for row in filtered_values if row[1] == user_id]
+        if level:
+            filtered_values = [row for row in filtered_values if row[2] == level]
         
-        return cursor.execute(query, params).fetchall()
-
-# 外部からインポート可能な変数・関数
-__all__ = [
-    'logger', 
-    'setup_logger', 
-    'get_log_files', 
-    'get_user_logger',
-    'get_logs_from_db',
-    'search_logs'
-]
+        return filtered_values[-limit:]
+        
+    except HttpError as e:
+        print(f"ログの取得エラー: {e}")
+        return []
