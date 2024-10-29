@@ -18,12 +18,19 @@ def init_session_state():
     for key, default_value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default_value
-
 def init_logger():
     """ロガーの初期化と設定"""
     try:
+        # デバッグ情報の出力
+        st.write("利用可能なsecrets:", list(st.secrets.keys()))
+        
         if st.session_state.logger is None:
-            SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+            try:
+                SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+                st.write("取得したspreadsheet_id:", SPREADSHEET_ID)  # 値の確認
+            except Exception as e:
+                st.write("spreadsheet_idの取得に失敗:", str(e))
+                
             user_id = st.session_state.nickname or "anonymous"
             st.session_state.logger = setup_logger(
                 spreadsheet_id=SPREADSHEET_ID,
