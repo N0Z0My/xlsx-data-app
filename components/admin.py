@@ -1,11 +1,22 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-from utils.logger import get_logs
+from utils.logger import setup_logger, get_logs
 from datetime import datetime, timedelta
+
+def get_admin_logger():
+    """管理者用のロガーを取得"""
+    SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+    return setup_logger(
+        spreadsheet_id=SPREADSHEET_ID,
+        user_id="admin"  # 管理者用のログとして識別
+    )
 
 def show_admin_screen():
     """管理者画面のメイン表示"""
+    logger = get_admin_logger()
+    logger.info("管理者画面にアクセスしました")
+    
     st.title("管理者画面 📊")
     
     tab1, tab2 = st.tabs(["📝 ログ閲覧", "📊 統計情報"])
@@ -17,11 +28,13 @@ def show_admin_screen():
         show_statistics()
 
     if st.button("クイズ画面に戻る"):
+        logger.info("管理者画面からクイズ画面に戻ります")
         st.session_state.screen = 'quiz'
         st.rerun()
 
 def show_log_viewer():
     """ログ閲覧画面の表示"""
+    logger = get_admin_logger()
     st.header("ログ閲覧")
     
     # フィルター設定
@@ -75,10 +88,12 @@ def show_log_viewer():
             st.info("表示するログがありません")
             
     except Exception as e:
+        logger.error(f"ログの読み込みに失敗: {str(e)}")
         st.error(f"ログの読み込みに失敗しました: {str(e)}")
 
 def show_statistics():
     """統計情報画面の表示"""
+    logger = get_admin_logger()
     st.header("統計情報")
     
     # 期間指定
@@ -135,8 +150,10 @@ def show_statistics():
             }).rename(columns={'message': '回答数'})
             st.dataframe(user_stats)
             
+            logger.info(f"統計情報を表示しました（期間：{start_date}～{end_date}）")
         else:
             st.info("表示するデータがありません")
             
     except Exception as e:
+        logger.error(f"統計情報の集計に失敗: {str(e)}")
         st.error(f"統計情報の集計に失敗しました: {str(e)}")
