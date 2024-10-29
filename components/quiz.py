@@ -8,13 +8,7 @@ import asyncio
 MAX_QUESTIONS = 20
 
 def show_quiz_screen(df, logger=None):
-    """クイズ画面を表示する
-    
-    Args:
-        df: クイズデータを含むDataFrame
-        logger: ログを記録するロガーオブジェクト
-    """  
-    
+    """クイズ画面を表示する関数"""
     if logger is None:
         logger = setup_logger(user_id=st.session_state.get('nickname'))
           
@@ -27,11 +21,24 @@ def show_quiz_screen(df, logger=None):
         st.session_state.correct_answers = {}
     if 'answers_history' not in st.session_state:
         st.session_state.answers_history = {}
+    if 'total_attempted' not in st.session_state:
+        st.session_state.total_attempted = 0
     
-    current_progress = min(st.session_state.question_index, MAX_QUESTIONS)
-    st.progress(current_progress / MAX_QUESTIONS)
-    st.write(f"## 問題 {st.session_state.question_index + 1} / {MAX_QUESTIONS}")
+    # 終了条件のチェック（total_attemptedベース）
+    if st.session_state.total_attempted >= MAX_QUESTIONS:
+        logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了")
+        st.session_state.quiz_results = {
+            'total_questions': MAX_QUESTIONS,
+            'correct_count': sum(1 for v in st.session_state.correct_answers.values() if v),
+            'answers_history': st.session_state.answers_history
+        }
+        st.session_state.screen = 'result'
+        st.rerun()
+        return
 
+    current_progress = st.session_state.total_attempted
+    st.progress(current_progress / MAX_QUESTIONS)
+    st.write(f"## 問題 {current_progress + 1} / {MAX_QUESTIONS}")
     current_question = st.session_state.question_index
     
     # 20問完了時の処理
@@ -75,6 +82,23 @@ def show_quiz_screen(df, logger=None):
 
     show_navigation_buttons(current_question, logger)
 
+def process_answer(is_correct, current_question, select_button, gpt_response, logger):
+    """回答を処理する関数"""
+    # まず回答の正誤を処理
+    if current_question not in st.session_state.answered_questions:
+        if is_correct:
+            logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
+        else:
+            logger.info(f"ユーザー[{st.session_state.nickname}] - 不正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
+        
+        # 回答済みとしてマークする前にカウントを増やす
+        st.session_state.total_attempted += 1
+        st.session_state.answered_questions.add(current_question)
+    
+    # 解説を表示
+    display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
+    st.write(display_response)
+
 def handle_answer(select_button, question, options, current_question, logger):
     with st.spinner('GPT-4が回答を評価しています...'):
         gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
@@ -92,6 +116,7 @@ def handle_answer(select_button, question, options, current_question, logger):
     }
     
     process_answer(is_correct, current_question, select_button, gpt_response, logger)  # loggerを追加
+
 
 def show_answer_animation(is_correct):
     if is_correct:
@@ -133,8 +158,7 @@ def show_answer_animation(is_correct):
             """, unsafe_allow_html=True)
 
 def show_navigation_buttons(current_question, logger):
-    remaining_questions = MAX_QUESTIONS - st.session_state.total_attempted
-    
+    """ナビゲーションボタンを表示する関数"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
@@ -143,21 +167,11 @@ def show_navigation_buttons(current_question, logger):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了 - 結果画面へ遷移")
                 st.session_state.screen = 'result'
                 st.rerun()
-        else:
+        elif current_question in st.session_state.answered_questions:
             if st.button('次の問題へ ➡️', use_container_width=True):
-                logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {current_question + 1}")
-                st.session_state.question_index += 1
+                logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {st.session_state.total_attempted + 1}")
+                next_question = current_question
+                while next_question in st.session_state.answered_questions:
+                    next_question = (next_question + 1) % len(df)
+                st.session_state.question_index = next_question
                 st.rerun()
-
-def process_answer(is_correct, current_question, select_button, gpt_response, logger):
-    if is_correct and current_question not in st.session_state.answered_questions:
-        st.session_state.correct_count += 1
-        logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
-    else:
-        logger.info(f"ユーザー[{st.session_state.nickname}] - 不正解 - 問題番号: {current_question + 1}, ユーザー回答: {select_button}")
-    
-    display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
-    st.write(display_response)
-    
-    st.session_state.answered_questions.add(current_question)
-    st.session_state.total_attempted += 1
