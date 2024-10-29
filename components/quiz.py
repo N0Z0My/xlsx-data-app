@@ -122,7 +122,7 @@ def show_answer_animation(is_correct):
     if is_correct:
         # 正解の場合のコンテナ
         with st.container():
-            col1, col2 = st.columns([4, 2])
+            col1, col2 = st.columns([6, 4])
             
             with col1:
                 st.success("🎉 正解！")
@@ -131,7 +131,7 @@ def show_answer_animation(is_correct):
                 st.markdown("""
                     <div style='background-color: #28a745; 
                               color: white; 
-                              padding: 5px 10px; 
+                              padding: 10px 20px; 
                               border-radius: 15px; 
                               text-align: center;'>
                         +1 point
