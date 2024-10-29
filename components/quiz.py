@@ -117,42 +117,34 @@ def handle_answer(select_button, question, options, current_question, logger):
     
     process_answer(is_correct, current_question, select_button, gpt_response, logger)  # loggerを追加
 
-
 def show_answer_animation(is_correct):
     if is_correct:
-        # 正解の場合のコンテナ
-        with st.container():
-            col1, col2 = st.columns([6, 4])
-            
-            with col1:
-                st.markdown("""
-                    <div style='background-color: #d4edda; 
-                              border: 2px solid #28a745;
-                              color: #155724; 
-                              padding: 30px; 
-                              border-radius: 15px; 
-                              text-align: center;
-                              font-size: 24px;
-                              margin: 20px 0;'>
-                        🎉 正解！
-                    </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown("""
-                    <div style='background-color: #28a745; 
-                              color: white; 
-                              padding: 25px; 
-                              border-radius: 15px; 
-                              text-align: center;
-                              font-size: 20px;
-                              margin: 20px 0;
-                              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
-                        +1 point
-                    </div>
-                """, unsafe_allow_html=True)
+        st.markdown("""
+            <div style='background-color: #d4edda; 
+                      border: 2px solid #28a745;
+                      color: #155724; 
+                      padding: 30px; 
+                      border-radius: 15px; 
+                      text-align: center;
+                      font-size: 24px;
+                      margin: 20px 0;
+                      position: relative;'>
+                🎉 正解！
+                <div style='
+                    background-color: #28a745;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 10px;
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    font-size: 18px;
+                '>
+                    +1 point
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
     else:
-        # 不正解の場合のコンテナ
         with st.container():
             st.markdown("""
                 <div style='background-color: #f8d7da; 
