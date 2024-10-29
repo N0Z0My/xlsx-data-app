@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from utils.gpt import evaluate_answer_with_gpt
+from utils.logger import setup_logger
 import asyncio
 
 # 問題数の制限を定数として定義
@@ -71,7 +72,7 @@ def show_quiz_screen(df, logger=None):
     show_navigation_buttons(current_question)
 
 def handle_answer(select_button, question, options, current_question):
-    logger = get_user_logger()
+    logger = setup_logger()
     
     with st.spinner('GPT-4が回答を評価しています...'):
         gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
