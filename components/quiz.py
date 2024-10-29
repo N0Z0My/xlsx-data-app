@@ -122,7 +122,7 @@ def show_answer_animation(is_correct):
     if is_correct:
         # 正解の場合のコンテナ
         with st.container():
-            col1, col2 = st.columns([3, 1])
+            col1, col2 = st.columns([4, 2])
             
             with col1:
                 st.success("🎉 正解！")
