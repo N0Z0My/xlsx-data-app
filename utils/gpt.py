@@ -1,9 +1,13 @@
 import asyncio
 from openai import OpenAI
 import streamlit as st
-from .logger import logger
+from .logger import setup_logger
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# loggerの初期化
+SPREADSHEET_ID = st.secrets["spreadsheet_id"]
+logger = setup_logger(spreadsheet_id=SPREADSHEET_ID, user_id="gpt")
 
 async def evaluate_answer_with_gpt(question, options, user_answer):
     prompt = f"""
