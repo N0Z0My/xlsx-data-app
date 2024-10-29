@@ -12,7 +12,8 @@ import pytz
 import streamlit as st
 
 SCOPE = "https://www.googleapis.com/auth/spreadsheets"
-SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
+#SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
+SHEET_ID = st.secrets["gsheet"]["spreadsheet_id"]
 SHEET_NAME = "sheet1"
 
 # 日本のタイムゾーンを設定
