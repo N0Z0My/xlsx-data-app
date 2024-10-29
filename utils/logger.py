@@ -12,9 +12,17 @@ import pytz
 import streamlit as st
 
 SCOPE = "https://www.googleapis.com/auth/spreadsheets"
-#SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
-SHEET_ID = st.secrets["gsheet"]["spreadsheet_id"]
+
+# secrets.tomlから設定を読み込む
+try:
+    SHEET_ID = st.secrets["gsheet"]["spreadsheet_id"]
+except KeyError:
+    # 開発環境用のフォールバック値
+    SHEET_ID = "1bvpz1W6hwzTLLPuK9X8C7QjivnDe1g_Di-Hmln9-xwM"
+    print("Warning: Using fallback SHEET_ID. Make sure to set up secrets.toml in production.")
+
 SHEET_NAME = "sheet1"
+
 
 # 日本のタイムゾーンを設定
 JP_TZ = pytz.timezone('Asia/Tokyo')
