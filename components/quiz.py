@@ -126,7 +126,6 @@ def show_answer_animation(is_correct):
             
             with col1:
                 st.success("🎉 正解！")
-                st.markdown("素晴らしい判断です！この知識は実際の旅行で役立つはずです。")
             
             with col2:
                 st.markdown("""
@@ -144,7 +143,6 @@ def show_answer_animation(is_correct):
         
         with error_container:
             st.error("💫 惜しい！")
-            st.markdown("間違いから学ぶことで、より深い知識が身につきます。")
             
             # ワンポイントボックス
             st.markdown("""
