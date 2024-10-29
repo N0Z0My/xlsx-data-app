@@ -24,8 +24,8 @@ logger = None
 class JSTFormatter(logging.Formatter):
     """JSTタイムゾーンに対応したフォーマッタ"""
     def converter(self, timestamp):
-        dt = datetime.fromtimestamp(timestamp)
-        return JP_TZ.localize(dt)
+        dt = datetime.fromtimestamp(timestamp, pytz.UTC)
+        return dt.astimezone(JP_TZ)
 
     def formatTime(self, record, datefmt=None):
         dt = self.converter(record.created)
