@@ -258,7 +258,7 @@ def show_navigation_buttons(current_question, logger):
                 st.rerun()
         elif current_question in st.session_state.answered_questions:
             if st.button('次の問題へ ➡️', use_container_width=True,
-                        type="primary",  # プライマリーカラーでボタンを強調
+                        type="secondary",  # プライマリーカラーでボタンを強調
                         help="次の問題に進みます"):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {st.session_state.total_attempted + 1}")
                 next_question = current_question
