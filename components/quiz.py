@@ -250,59 +250,18 @@ def show_navigation_buttons(current_question, logger):
     
     with col2:
         if st.session_state.total_attempted >= MAX_QUESTIONS:
-            # 結果を見るボタンは通常のprimary
             if st.button('結果を見る📚', 
                         use_container_width=True, 
-                        type="primary",
+                        type="primary",  # 結果確認は重要なアクションなのでprimary
                         help="クイズが完了しました。結果を確認しましょう"):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了 - 結果画面へ遷移")
                 st.session_state.screen = 'result'
                 st.rerun()
         elif current_question in st.session_state.answered_questions:
-            # 次へボタン用のキー生成
-            next_key = f"next_button_{current_question}"
-            
-            # カスタムスタイルのボタン
-            st.markdown(f"""
-                <style>
-                    .secondary-filled {{
-                        background-color: #CCCCCC;
-                        border: none;
-                        color: white;
-                        padding: 0.5625rem 1rem;
-                        border-radius: 0.5rem;
-                        width: 100%;
-                        text-align: center;
-                        font-size: 1rem;
-                        font-weight: 400;
-                        line-height: 1.5;
-                        cursor: pointer;
-                        margin-bottom: 1rem;
-                        text-decoration: none;
-                        transition: background-color 0.2s ease;
-                        display: inline-block;
-                        -webkit-appearance: button;
-                        user-select: none;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                    }}
-                    .secondary-filled:hover {{
-                        background-color: #525252;
-                    }}
-                    .arrow {{
-                        margin-left: 5px;
-                    }}
-                </style>
-                <div class="stButton">
-                    <button id="{next_key}" 
-                            class="secondary-filled"
-                            onclick="document.getElementById('hidden_next_button_{next_key}').click();">
-                        次の問題へ <span class="arrow">➡️</span>
-                    </button>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # 実際のアクションを行うための隠しボタン（display:noneは使わない）
-            if st.button('', key=f'hidden_next_button_{next_key}'):
+            if st.button('次の問題へ ➡️', 
+                        use_container_width=True,
+                        type="secondary",  # 次へは控えめにsecondary
+                        help="次の問題に進みます"):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {st.session_state.total_attempted + 1}")
                 next_question = current_question
                 while next_question in st.session_state.answered_questions:
