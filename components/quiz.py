@@ -266,7 +266,7 @@ def show_navigation_buttons(current_question, logger):
             st.markdown(f"""
                 <style>
                     .secondary-filled {{
-                        background-color: #666666;
+                        background-color: #CCCCCC;
                         border: none;
                         color: white;
                         padding: 0.5625rem 1rem;
@@ -295,14 +295,14 @@ def show_navigation_buttons(current_question, logger):
                 <div class="stButton">
                     <button id="{next_key}" 
                             class="secondary-filled"
-                            onclick="document.getElementById('hidden_next_button').click();">
+                            onclick="document.getElementById('hidden_next_button_{next_key}').click();">
                         次の問題へ <span class="arrow">➡️</span>
                     </button>
                 </div>
             """, unsafe_allow_html=True)
             
-            # 実際のアクションを行うための隠しボタン
-            if st.button('次へ', key='hidden_next_button', style='display: none;'):
+            # 実際のアクションを行うための隠しボタン（display:noneは使わない）
+            if st.button('', key=f'hidden_next_button_{next_key}'):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {st.session_state.total_attempted + 1}")
                 next_question = current_question
                 while next_question in st.session_state.answered_questions:
