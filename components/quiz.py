@@ -243,19 +243,29 @@ def handle_answer(select_button, question, options, current_question, logger):
 
 def show_navigation_buttons(current_question, logger):
     """ナビゲーションボタンの表示"""
+    # 解説との間にスペースを追加
+    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         if st.session_state.total_attempted >= MAX_QUESTIONS:
-            if st.button('結果を見る📚', use_container_width=True):
+            if st.button('結果を見る📚', use_container_width=True, 
+                        type="primary",  # プライマリーカラーでボタンを強調
+                        help="クイズが完了しました。結果を確認しましょう"):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - {MAX_QUESTIONS}問完了 - 結果画面へ遷移")
                 st.session_state.screen = 'result'
                 st.rerun()
         elif current_question in st.session_state.answered_questions:
-            if st.button('次の問題へ ➡️', use_container_width=True):
+            if st.button('次の問題へ ➡️', use_container_width=True,
+                        type="primary",  # プライマリーカラーでボタンを強調
+                        help="次の問題に進みます"):
                 logger.info(f"ユーザー[{st.session_state.nickname}] - 次の問題へ進む - 現在の問題番号: {st.session_state.total_attempted + 1}")
                 next_question = current_question
                 while next_question in st.session_state.answered_questions:
                     next_question = (next_question + 1) % len(df)
                 st.session_state.question_index = next_question
                 st.rerun()
+    
+    # フッターのような余白を追加
+    st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
