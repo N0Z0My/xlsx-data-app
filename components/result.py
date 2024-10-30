@@ -2,7 +2,7 @@ import streamlit as st
 from utils.logger import logger
 
 def show_result_screen(df):
-    st.title("💮 クイズ完了！")
+    st.title("🙌クイズ完了")
     
     # quiz_resultsからスコア情報を取得
     if 'quiz_results' not in st.session_state:
@@ -35,13 +35,13 @@ def show_result_screen(df):
     
     # 成績に応じたメッセージ
     if accuracy == 100:
-        st.markdown("💯 完璧です！素晴らしい成績です！")
+        st.markdown("# 💯 完璧です！素晴らしい成績です！")
     elif accuracy >= 80:
-        st.markdown("🌟 素晴らしい成績です！")
+        st.markdown("# 🌟 素晴らしい成績です！")
     elif accuracy >= 60:
-        st.markdown("👍 よく頑張りました！")
+        st.markdown("# 👍 よく頑張りました！")
     else:
-        st.markdown("💪 次は更に良い成績を目指しましょう！")
+        st.markdown("# 💪 次は更に良い成績を目指しましょう！")
     
     # リトライボタン
     if st.button("もう一度チャレンジ"):
