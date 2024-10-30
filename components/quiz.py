@@ -12,7 +12,7 @@ def show_quiz_screen(df, logger=None):
     if logger is None:
         logger = setup_logger(user_id=st.session_state.get('nickname'))
           
-    st.title("💡Quiz")
+    st.title("🗽海外旅行の基礎知識Check🏝️")
 
     # セッション状態の初期化
     if 'answered_questions' not in st.session_state:
@@ -156,7 +156,7 @@ def show_answer_animation(is_correct):
                     align-items: center;
                     gap: 12px;
                 '>
-                    <span style='font-size: 24px;'>💡</span>
+                    <span style='font-size: 24px;'>💫</span>
                     <span style='font-weight: 600;'>惜しいですね</span>
                 </div>
             </div>
@@ -250,7 +250,7 @@ def show_navigation_buttons(current_question, logger):
     
     with col2:
         if st.session_state.total_attempted >= MAX_QUESTIONS:
-            if st.button('結果を見る📚', 
+            if st.button('結果を見る🎖️', 
                         use_container_width=True, 
                         type="primary",  # 結果確認は重要なアクションなのでprimary
                         help="クイズが完了しました。結果を確認しましょう"):
