@@ -175,64 +175,82 @@ def process_answer(is_correct, current_question, select_button, gpt_response, lo
         st.session_state.total_attempted += 1
         st.session_state.answered_questions.add(current_question)
     
-    # 解説を表示（元の表示形式を維持）
-    display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
-    
-    # GPTレスポンスから情報を抽出
-    lines = display_response.strip().split('\n')
-    user_answer = lines[0].replace("あなたの回答:", "").strip()
-    correct_answer = lines[1].replace("正解:", "").strip()
-    explanation = lines[2].replace("解説:", "").strip()
-
-    # 解説の表示
-    st.markdown("""
-        <style>
-            .explanation-box {
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 16px;
-                margin-top: 12px;
-                background-color: #f8f9fa;
-            }
-            .answer-detail {
-                display: flex;
-                align-items: center;
-                margin: 8px 0;
-                font-size: 15px;
-            }
-            .answer-label {
-                min-width: 100px;
-                font-weight: 600;
-                color: #555;
-            }
-            .explanation-text {
-                margin-top: 12px;
-                padding-top: 12px;
-                border-top: 1px solid #e0e0e0;
-                line-height: 1.6;
-                color: #333;
-            }
-        </style>
-        <div class="explanation-box">
-            <div class="answer-detail">
-                <span class="answer-label">あなたの回答:</span>
-                <span>{}</span>
+    try:
+        # GPTレスポンスから情報を抽出（より堅牢な方法に変更）
+        response_lines = [line.strip() for line in gpt_response.split('\n') if line.strip()]
+        
+        # デフォルト値を設定
+        user_answer = select_button
+        correct_answer = "解答の取得に失敗しました"
+        explanation = "解説の取得に失敗しました"
+        
+        # 各行を解析
+        for line in response_lines:
+            if line.startswith("あなたの回答:"):
+                user_answer = line.replace("あなたの回答:", "").strip()
+            elif line.startswith("正解:"):
+                correct_answer = line.replace("正解:", "").strip()
+            elif line.startswith("解説:"):
+                explanation = line.replace("解説:", "").strip()
+        
+        # 解説の表示
+        st.markdown(
+            """
+            <style>
+                .explanation-box {
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-top: 12px;
+                    background-color: #f8f9fa;
+                }
+                .answer-detail {
+                    display: flex;
+                    align-items: center;
+                    margin: 8px 0;
+                    font-size: 15px;
+                }
+                .answer-label {
+                    min-width: 100px;
+                    font-weight: 600;
+                    color: #555;
+                }
+                .explanation-text {
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 1px solid #e0e0e0;
+                    line-height: 1.6;
+                    color: #333;
+                }
+            </style>
+            <div class="explanation-box">
+                <div class="answer-detail">
+                    <span class="answer-label">あなたの回答:</span>
+                    <span>{}</span>
+                </div>
+                <div class="answer-detail">
+                    <span class="answer-label">正解:</span>
+                    <span>{}</span>
+                </div>
+                <div class="explanation-text">
+                    <strong>💡 解説:</strong><br>
+                    {}
+                </div>
             </div>
-            <div class="answer-detail">
-                <span class="answer-label">正解:</span>
-                <span>{}</span>
-            </div>
-            <div class="explanation-text">
-                <strong>💡 解説:</strong><br>
-                {}
-            </div>
-        </div>
-    """.format(
-        user_answer,
-        correct_answer,
-        explanation
-    ), unsafe_allow_html=True)
-
+            """.format(
+                user_answer,
+                correct_answer,
+                explanation
+            ),
+            unsafe_allow_html=True
+        )
+        
+    except Exception as e:
+        logger.error(f"回答表示処理でエラーが発生: {str(e)}")
+        # エラー時のフォールバック表示
+        st.error("回答の表示中にエラーが発生しました。")
+        st.write(gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip())
+        
 def handle_answer(select_button, question, options, current_question, logger):
     """回答ハンドリング処理"""
     with st.spinner('GPT-4が回答を評価しています...'):
