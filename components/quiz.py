@@ -82,41 +82,6 @@ def show_quiz_screen(df, logger=None):
 
     show_navigation_buttons(current_question, logger)
 
-def process_answer(is_correct, current_question, select_button, gpt_response, logger):
-    """回答を処理する関数"""
-    # まず回答の正誤を処理
-    if current_question not in st.session_state.answered_questions:
-        if is_correct:
-            logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
-        else:
-            logger.info(f"ユーザー[{st.session_state.nickname}] - 不正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
-        
-        # 回答済みとしてマークする前にカウントを増やす
-        st.session_state.total_attempted += 1
-        st.session_state.answered_questions.add(current_question)
-    
-    # 解説を表示
-    display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
-    st.write(display_response)
-
-def handle_answer(select_button, question, options, current_question, logger):
-    with st.spinner('GPT-4が回答を評価しています...'):
-        gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
-    
-    is_correct = "RESULT:[CORRECT]" in gpt_response
-    show_answer_animation(is_correct)
-    
-    # 回答結果の保存
-    st.session_state.correct_answers[current_question] = is_correct
-    st.session_state.answers_history[current_question] = {
-        'question': question,
-        'user_answer': select_button,
-        'is_correct': is_correct,
-        'explanation': gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
-    }
-    
-    process_answer(is_correct, current_question, select_button, gpt_response, logger)  # loggerを追加
-
 def show_answer_animation(is_correct):
     """洗練された回答アニメーション表示"""
     if is_correct:
@@ -197,7 +162,98 @@ def show_answer_animation(is_correct):
             </div>
         """, unsafe_allow_html=True)
 
+def process_answer(is_correct, current_question, select_button, gpt_response, logger):
+    """回答処理と表示"""
+    # まず回答の正誤を処理
+    if current_question not in st.session_state.answered_questions:
+        if is_correct:
+            logger.info(f"ユーザー[{st.session_state.nickname}] - 正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
+        else:
+            logger.info(f"ユーザー[{st.session_state.nickname}] - 不正解 - 問題番号: {st.session_state.total_attempted + 1}, ユーザー回答: {select_button}")
+        
+        # 回答済みとしてマークする前にカウントを増やす
+        st.session_state.total_attempted += 1
+        st.session_state.answered_questions.add(current_question)
+    
+    # 解説を表示（元の表示形式を維持）
+    display_response = gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
+    
+    # GPTレスポンスから情報を抽出
+    lines = display_response.strip().split('\n')
+    user_answer = lines[0].replace("あなたの回答:", "").strip()
+    correct_answer = lines[1].replace("正解:", "").strip()
+    explanation = lines[2].replace("解説:", "").strip()
+
+    # 解説の表示
+    st.markdown("""
+        <style>
+            .explanation-box {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 16px;
+                margin-top: 12px;
+                background-color: #f8f9fa;
+            }
+            .answer-detail {
+                display: flex;
+                align-items: center;
+                margin: 8px 0;
+                font-size: 15px;
+            }
+            .answer-label {
+                min-width: 100px;
+                font-weight: 600;
+                color: #555;
+            }
+            .explanation-text {
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid #e0e0e0;
+                line-height: 1.6;
+                color: #333;
+            }
+        </style>
+        <div class="explanation-box">
+            <div class="answer-detail">
+                <span class="answer-label">あなたの回答:</span>
+                <span>{}</span>
+            </div>
+            <div class="answer-detail">
+                <span class="answer-label">正解:</span>
+                <span>{}</span>
+            </div>
+            <div class="explanation-text">
+                <strong>💡 解説:</strong><br>
+                {}
+            </div>
+        </div>
+    """.format(
+        user_answer,
+        correct_answer,
+        explanation
+    ), unsafe_allow_html=True)
+
+def handle_answer(select_button, question, options, current_question, logger):
+    """回答ハンドリング処理"""
+    with st.spinner('GPT-4が回答を評価しています...'):
+        gpt_response = asyncio.run(evaluate_answer_with_gpt(question, options, select_button))
+    
+    is_correct = "RESULT:[CORRECT]" in gpt_response
+    
+    # 回答結果の保存
+    st.session_state.correct_answers[current_question] = is_correct
+    st.session_state.answers_history[current_question] = {
+        'question': question,
+        'user_answer': select_button,
+        'is_correct': is_correct,
+        'explanation': gpt_response.replace("RESULT:[CORRECT]", "").replace("RESULT:[INCORRECT]", "").strip()
+    }
+    
+    show_answer_animation(is_correct)
+    process_answer(is_correct, current_question, select_button, gpt_response, logger)
+
 def show_navigation_buttons(current_question, logger):
+    """ナビゲーションボタンの表示"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
